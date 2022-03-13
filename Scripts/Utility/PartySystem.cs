@@ -5,92 +5,80 @@ using UnityEngine;
 public class PartySystem : MonoBehaviour
 {
 
-    private List<string> players = new List<string>();
+    private static List<string> players = new List<string>();
+    private static string userId;
+    private static string[] expectedUsers;
+    private static bool isPartyLeader = true;
+    private static bool currentlyInParty = false;
+    private static string partyLeaderID;
 
-    private string userId;
-    private string[] expectedUsers;
-    private string partyLeaderID;
-
-    private bool isPartyLeader;
-    private bool currentlyInParty;
-
-    public GameObject findMatchButton, notPartyLeaderButton, deletePartyButton, inPartyImage;
-
-    void Start()
-    {
-        isPartyLeader = true;
-        currentlyInParty = false;
-    }
-
-    public void SetPartyLeaderID(string val)
+    public static void SetPartyLeaderID(string val)
     {
         partyLeaderID = val;
     }
 
-    public string GetPartyLeaderID()
+    public static string GetPartyLeaderID()
     {
-        return this.partyLeaderID;
+        return partyLeaderID;
     }
 
-    public void SetInParty(bool val)
+    public static void SetInParty(bool val)
     {
         currentlyInParty = val;
-        if (currentlyInParty)
-        {
-            inPartyImage.SetActive(true);
-            if(isPartyLeader)
-                deletePartyButton.SetActive(true);
-        }
-        else
-        {
-            deletePartyButton.SetActive(false);
-        }
     }
 
-    public bool IsInParty()
+    public static bool IsInParty()
     {
         return currentlyInParty;
     }
 
-    public void SetIsPartyLeader(bool val)
+    public static bool IsPartyLeader()
     {
-        isPartyLeader = val;
-
-        findMatchButton.SetActive(isPartyLeader);
-        notPartyLeaderButton.SetActive(!isPartyLeader);
+        return isPartyLeader;
     }
 
-    public void SetUserID(string id)
+    public static void SetIsPartyLeader(bool val)
+    {
+        isPartyLeader = val;
+        
+    }
+
+    public static void SetUserID(string id)
     {
         userId = id;
     }
 
-    public void SetExpectedUsers()
+    public static string GetUserID()
+    {
+        return userId;
+    }
+
+    public static void SetExpectedUsers()
     {
         expectedUsers = new string[players.Count];
-
-        for(int i = 0; i < expectedUsers.Length; i++)
+        for (int i = 0; i < expectedUsers.Length; i++)
         {
             expectedUsers[i] = players[i];
         }
     }
 
-    public void AddExpectedUsers(string userId)
+    public static void AddExpectedUsers(string userId)
     {
         players.Add(userId);
     }
 
-    public void ClearExpectedUsers()
+    public static void ClearExpectedUsers()
     {
         players.Clear();
+        players.Add(userId);
     }
 
-    public void RemoveFromExpectedUsers(string userId)
+    public static void RemoveFromExpectedUsers(string userId)
     {
         players.Remove(userId);
     }
 
-    public string[] GetExpectedUsers()
+    public static string[] GetExpectedUsers()
     {
         SetExpectedUsers();
         return expectedUsers;

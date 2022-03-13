@@ -14,7 +14,7 @@ public class RoleInfoController : MonoBehaviour
 
     void Start()
     {
-        if (RoleManagement.GetRole()==1)
+        if (LoadSceneLogic.playerRole==1)
         {
             detectiveText.text = "Role: Detective";
         }
@@ -28,7 +28,7 @@ public class RoleInfoController : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.F1))
         {
-            if (RoleManagement.GetRole() == 1)
+            if (LoadSceneLogic.playerRole == 1)
             {
                 detectiveInfo.SetBool("view", true);
             }
@@ -39,7 +39,7 @@ public class RoleInfoController : MonoBehaviour
         }
         if (Input.GetKeyUp(KeyCode.F1))
         {
-            if (RoleManagement.GetRole() == 1)
+            if (LoadSceneLogic.playerRole == 1)
             {
                 detectiveInfo.SetBool("view", false);
             }

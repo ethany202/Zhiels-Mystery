@@ -1,27 +1,57 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 
 public class ChangeSkin : MonoBehaviour
 {
 
     public Transform parentObj;
-    public GameObject defaultSkin;
+    public bool selectedCharacter = false;
+    //public GameObject defaultSkin;
 
-    void Start()
-    {
-        //Instantiate(defaultSkin, Vector3.zero, Quaternion.identity, parentObj);
-        SetCurrentSkin(defaultSkin);
-    }
+    public GameObject selectButton, lockedIn;
 
-    public void SetCurrentSkin(UnityEngine.Object obj)
+    public CharacterSelectController characterSelectController;
+
+    public void SetCurrentCharacter(UnityEngine.Object obj)
     {
-        GameObject o = GameObject.FindWithTag("Character");
-        Destroy(parentObj.GetChild(0).gameObject);
+        if (this.selectedCharacter)
+            return;
+
+        GameObject selectedCharacter = GameObject.FindWithTag("Character");
+
+        if (selectedCharacter != null)
+        {
+            Destroy(selectedCharacter);
+        }
         Instantiate(obj, Vector3.zero, Quaternion.identity, parentObj);
 
         int spaceIndex = obj.name.IndexOf(' ');
-        string firstHalf = obj.name.Substring(0, spaceIndex + 1);
-        CustomizedData.SetSkinName(firstHalf + "Skin");
+        string firstHalf = obj.name.Substring(0, spaceIndex);
+        CustomizedData.SetCharacterName(firstHalf);
+
+        //this.selectedCharacter = true;
     }
+
+    public void SelectCharacter()
+    {
+        if (CustomizedData.GetCharacterName() == null)
+        {
+            return;
+        }
+
+        HashSet<string> selectedCharacters = characterSelectController.GetSelectedCharacters();
+
+        if (selectedCharacters.Contains(CustomizedData.GetCharacterName()))
+        {
+            return;
+        }
+
+        selectButton.SetActive(false);
+        lockedIn.SetActive(true);
+
+        characterSelectController.SetPlayerReady();
+    }
+
 }

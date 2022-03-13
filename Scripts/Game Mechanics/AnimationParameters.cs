@@ -12,25 +12,27 @@ public class AnimationParameters : MonoBehaviour
         {"isCrouchWalking", Animator.StringToHash("isCrouchWalking") },   
         {"holdingKnife", Animator.StringToHash("holdingKnife") },
         {"isAiming", Animator.StringToHash("isAiming") },
-        {"halfAiming", Animator.StringToHash("halfAiming") },
-        {"isMoving", Animator.StringToHash("isMoving") },       
+        {"isMoving", Animator.StringToHash("isMoving") },
+        {"isWalking", Animator.StringToHash("isWalking") },
+        {"isRunning", Animator.StringToHash("isRunning") },
+        {"checkingTargetData", Animator.StringToHash("checkingTargetData") }
     };
 
     public static Dictionary<string, int> floats = new Dictionary<string, int>()
     {
         { "velocityNormalized", Animator.StringToHash("velocityNormalized")},
         {"knife", Animator.StringToHash("knife") },
-        {"crouching", Animator.StringToHash("crouching") }
+        {"crouching", Animator.StringToHash("crouching") },
+        {"carrying", Animator.StringToHash("carrying") },
+        {"targetData", Animator.StringToHash("targetData") }
     };
 
     public static Dictionary<string, int> triggers = new Dictionary<string, int>()
     {
         {"idlePunch", Animator.StringToHash("idlePunch") },
-        {"kick", Animator.StringToHash("kick") },
         {"jump", Animator.StringToHash("jump") },
         {"punch", Animator.StringToHash("punch") },
         {"slide", Animator.StringToHash("slide") },
-        {"shoot", Animator.StringToHash("shoot") },
-        {"halfShoot", Animator.StringToHash("halfShoot") }
+        {"shoot", Animator.StringToHash("shoot") }
     };
 }

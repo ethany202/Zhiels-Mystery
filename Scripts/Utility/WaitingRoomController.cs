@@ -6,174 +6,68 @@ using Photon.Pun;
 using UnityEngine.SceneManagement;
 using Photon.Realtime;
 using UnityEngine.UI;
+using System.ComponentModel;
+using System.Threading.Tasks;
+using System;
+using Steamworks;
 
 public class WaitingRoomController : MonoBehaviourPunCallbacks
 {
-    private int multiplayerScene;
-    private int maxPlayers;
-
-    private int lobbySceneIndex = 0;
-    // private int loadingSceneIndex;
-
-    private int playerCount;
-    private int hitmenCount;
-    private int detectiveCount;
-
-    public TMP_Text roleDisplay;
-
-    bool ready;
-
-    public GameObject menu;
-    bool menuOpen;
-
-    public SpawnPlayer spawnLocation;
-
-    public Transform hitmenSpawnTransform;
-    public Transform detectiveSpawnTransform;
-    public Vector3 hitmenSpawn;
-    public Vector3 detectiveSpawn;
-
-    public GameObject gameReady;
-
-    public TMP_Text currentMap;
-    public TMP_Text currentStyle;
-
-    public AudioController audioController;
-    void ResetMapController()
+    public void SetDefaultKeys()
     {
-        MapInfoController.maxPlayers = 0;
-        MapInfoController.playerCount = 0;
-        playerCount = 0;
-        hitmenCount = 0;
-        detectiveCount = 0;
+        Dictionary<string, KeyCode> controls = new Dictionary<string, KeyCode>();
+
+        //mutable keybinds:
+        controls.Add("sprint", KeyCode.LeftControl);
+        controls.Add("crouch", KeyCode.LeftShift);
+        controls.Add("jump", KeyCode.Space);
+        controls.Add("open", KeyCode.E);
+        controls.Add("grab", KeyCode.G);
+        controls.Add("drop", KeyCode.Z);
+        controls.Add("targetData", KeyCode.Alpha1);
+        controls.Add("slide", KeyCode.F);
+
+        // immutable keys:
+        controls.Add("forward", KeyCode.W);
+        controls.Add("backward", KeyCode.S);
+        controls.Add("right", KeyCode.D);
+        controls.Add("left", KeyCode.A);
+        controls.Add("attack", KeyCode.Mouse0);
+        controls.Add("scope", KeyCode.Mouse1);
+
+        ControlsConstants.keys = controls;
     }
 
-    public void SpawnLogistics()
-    {
-        playerCount = PhotonNetwork.PlayerList.Length;
-        MapInfoController.playerCount = playerCount;
-
-        if(playerCount > MapInfoController.maxPlayers / 2)
-        {
-            spawnLocation.SetSpawn(detectiveSpawn);
-            RoleManagement.SetRole(1);
-            LoadSceneLogic.playerRole = 1;
-            roleDisplay.text = "ROLE: DETECTIVE";
-        }
-        else
-        {
-            spawnLocation.SetSpawn(hitmenSpawn);
-            RoleManagement.SetRole(0);
-            LoadSceneLogic.playerRole = 0;
-            roleDisplay.text = "ROLE: HITMAN";
-        }
-        spawnLocation.CreatePlayer();
-        audioController.SetAllVolume();
-
-    }
 
     void Start()
     {
-        hitmenSpawn = hitmenSpawnTransform.position;
-        detectiveSpawn = detectiveSpawnTransform.position;
-
-        currentMap.text = "Map: "+MapInfoController.GetCurrentMap();
-        currentStyle.text = "Style: "+MapInfoController.GetCurrentStyle();
-        
-        gameReady.SetActive(false);
-        ResetMapController();
-        multiplayerScene = MapInfoController.GetMultiplayerMapScene();
-        maxPlayers = PhotonNetwork.CurrentRoom.MaxPlayers;
-        MapInfoController.maxPlayers = maxPlayers;
-        SpawnLogistics();
-        ready = false;
-        menuOpen = false;
-        PlayerCountUpdate();
-
-        
+        SetDefaultKeys();
+        ConnectToPhoton();
     }
 
-    public void PlayerCountUpdate()
+    public void ConnectToPhoton()
     {
-        
-        playerCount = PhotonNetwork.PlayerList.Length;
-
-        MapInfoController.playerCount = playerCount;
-        if (playerCount == maxPlayers)
+        if (!PhotonNetwork.IsConnected)
         {
-            ready = true;
-        }
-        else
-        {
-            ready = false;
+            PhotonNetwork.ConnectUsingSettings();
         }
     }
 
-    public override void OnPlayerEnteredRoom(Player newPlayer)
+    public override void OnConnectedToMaster()
     {
-        PlayerCountUpdate();
-        audioController.SetAllVolume();
-
+        Debug.Log("Connected");
     }
 
-    public override void OnPlayerLeftRoom(Player otherPlayer)
+    public void JoinTestingScene()
     {
-        QueueManager.SetPlayerLeft(true);
-        DelayCancel();
+        PhotonNetwork.JoinOrCreateRoom("StorySparkies", new RoomOptions(), null, null);
     }
 
-    void Update()
+    public override void OnJoinedRoom()
     {
-        WaitingForMorePlayers();
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            OpenMenu(!menuOpen);
-        }
+
+        PhotonNetwork.LoadLevel(1);
     }
 
-    void WaitingForMorePlayers()
-    {
-        if (ready)
-        {
-            gameReady.SetActive(true);
-            StartCoroutine(LoadScene());
-            ready = false;
-        }
-    }
-
-    IEnumerator LoadScene()
-    {  
-        if (!PhotonNetwork.IsMasterClient)
-        {
-            yield break;
-            //return;
-        }
-        yield return new WaitForSecondsRealtime(3f);
-        PhotonNetwork.CurrentRoom.IsOpen = false;
-        PhotonNetwork.LoadLevel(multiplayerScene);
-    }
-
-    public void DelayCancel()
-    {
-        PhotonNetwork.LeaveRoom();
-        SceneManager.LoadScene(lobbySceneIndex);
-    }
-
-    public void OpenMenu(bool val)
-    {
-        menu.SetActive(val);
-        menuOpen = val;
-        if (menuOpen)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-        else
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
-    }
-    
 
 }

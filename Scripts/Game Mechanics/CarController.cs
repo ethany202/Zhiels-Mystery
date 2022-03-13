@@ -34,8 +34,10 @@ public class CarController : MonoBehaviour
     [SerializeField] private Transform rearRightWheelTransform;
 
     //public ParticleSystem spark;
-
-
+    //public Animator driverDoorAnim;
+    //private GameObject
+    //public VehicleEnterData driverDoorData;
+    //public Transform playerExitSpawn;
 
     void FixedUpdate()
     {
@@ -43,6 +45,7 @@ public class CarController : MonoBehaviour
         HandleMotor();
         HandleSteering();
         UpdateWheels();
+        //PlayerInput();
     }
 
     private void GetInput()
@@ -103,10 +106,18 @@ public class CarController : MonoBehaviour
         Vector3 pos;
         Quaternion rot;
         wheelCollider.GetWorldPose(out pos, out rot);
-        trans.rotation = rot;
+
+        //trans.rotation = rot;
+        //trans.localEulerAngles = new Vector3(trans.localEulerAngles.x, wheelCollider.steerAngle - trans.localEulerAngles.z, trans.localEulerAngles.z);
         trans.position = pos;
     }
 
+    
+
+    public string ToString()
+    {
+        return "Car";
+    }
     /*private void OnCollisionEnter(Collision other)
     {
         if (other.transform != transform && other.contacts.Length != 0)

@@ -9,20 +9,24 @@ using ExitGames.Client.Photon;
 using Steamworks;
 using TMPro;
 
-public class ChatManager : MonoBehaviour, IChatClientListener
+public class ChatManager : MonoBehaviourPunCallbacks, IChatClientListener
 {
     private const string ServerInviteMsg = "ServerMessage1001";
     private const string AcceptInviteMsg = "ServerMessage1003";
     private const string PartyDeletedMsg = "ServerMessage1010";
     private const string PartyMemberLeftMSG = "ServerMessage1015";
+    private const string FindMatchMSG = "ServerMessage1200";
+    private const string MapDataMsg = "MapTypeMsg:";
+    private const string RoomIndexMsg = "RoomIndexMsg:";
+
+    private HashSet<string> serverMessages = new HashSet<string>() { ServerInviteMsg, AcceptInviteMsg, PartyDeletedMsg, PartyMemberLeftMSG };
 
     private ChatClient chatClient;
-    private string username;
+    private string username, partyMap;
+    private int roomIndex;
 
     public Transform parentPanel;
     public GameObject friendButtonPrefab;
-
-    public PartySystem partyData;
 
     private string currentRecipient;
     public GameObject chatUI, inviteButton, leaveButton, inPartyButton, inPartyImage;
@@ -34,20 +38,40 @@ public class ChatManager : MonoBehaviour, IChatClientListener
 
     public Microtransactions paymentManager;
 
+    public LobbyController findMatchSys;
+
+    public GameObject findMatchButton, notPartyLeaderButton, deletePartyButton;
+
     void Start()
     {
         if (SteamManager.Initialized)
         {
             username = SteamFriends.GetPersonaName();
+            //username = SteamUser.GetSteamID().ToString();
 
-            paymentManager.SetSteamID(SteamUser.GetSteamID().ToString());
-            paymentManager.SetSteamUsername(username);
+            paymentManager.SetSteamID(username);
+            paymentManager.SetSteamUsername(SteamFriends.GetPersonaName());
 
             chatClient = new ChatClient(this);
             ConnectToPhotonChat();
-            PopulateFriendPanel();      
+            PopulateFriendPanel();
         }
+
+        
     }
+
+    private void TogglePartyUI()
+    {
+        TogglePartyImages();
+        ToggleMatchButtons(PartySystem.IsPartyLeader());
+        ToggleButtons();
+    }
+
+    public override void OnConnectedToMaster()
+    {
+        TogglePartyUI();
+    }
+
 
     void Update()
     {
@@ -67,12 +91,21 @@ public class ChatManager : MonoBehaviour, IChatClientListener
             CSteamID m_Friend = SteamFriends.GetFriendByIndex(i, EFriendFlags.k_EFriendFlagImmediate);
             string friendName = SteamFriends.GetFriendPersonaName(m_Friend);
 
-            friendButtonPrefab.GetComponentInChildren<TMP_Text>().text = friendName;
-            int imageID= SteamFriends.GetLargeFriendAvatar(m_Friend);
+            if (friendName.Length > 14)
+            {
+                friendButtonPrefab.GetComponentInChildren<TMP_Text>().text = friendName.Substring(0,14);
+            }
+            else
+            {
+                friendButtonPrefab.GetComponentInChildren<TMP_Text>().text = friendName;
+            }
+
+            //friendButtonPrefab.GetComponentInChildren<TMP_Text>().text = friendName;
+            int imageID = SteamFriends.GetLargeFriendAvatar(m_Friend);
 
             friendButtonPrefab.GetComponentInChildren<RawImage>().texture = GetSteamImage(imageID);
 
-            GameObject friendButton=Instantiate(friendButtonPrefab, parentPanel);
+            GameObject friendButton = Instantiate(friendButtonPrefab, parentPanel);
             friendButton.GetComponent<Button>().onClick.AddListener(delegate { SetCurrentRecipient(friendName); });
         }
     }
@@ -104,27 +137,35 @@ public class ChatManager : MonoBehaviour, IChatClientListener
 
     public void LeaveParty()
     {
-        if(partyData.GetPartyLeaderID() != username)
+        if (PartySystem.GetPartyLeaderID() != username)
         {
-            SendDirectMessage(partyData.GetPartyLeaderID(), PartyMemberLeftMSG);
-        }      
+            SendDirectMessage(PartySystem.GetPartyLeaderID(), PartyMemberLeftMSG);
+        }
 
-        partyData.SetInParty(false);
-        partyData.SetIsPartyLeader(true);
-        partyData.SetPartyLeaderID(username);
+        PartySystem.SetInParty(false);
+        PartySystem.SetIsPartyLeader(true);
+        PartySystem.SetPartyLeaderID(username);
 
-        inPartyImage.SetActive(false);
+        //inPartyImage.SetActive(false);
+
+        ToggleMatchButtons(true);
+        TogglePartyImages();
     }
 
     public void DeleteParty()
     {
-        for(int i = 1; i < partyData.GetExpectedUsers().Length; i++)
+        for (int i = 1; i < PartySystem.GetExpectedUsers().Length; i++)
         {
-            SendDirectMessage(partyData.GetExpectedUsers()[i], PartyDeletedMsg);
+            SendDirectMessage(PartySystem.GetExpectedUsers()[i], PartyDeletedMsg);
         }
-        partyData.SetInParty(false);
-        inPartyImage.SetActive(false);
-        partyData.ClearExpectedUsers();
+        PartySystem.SetInParty(false);
+        //inPartyImage.SetActive(false);
+        PartySystem.ClearExpectedUsers();
+
+        TogglePartyImages();
+        ToggleMatchButtons(true);
+        TogglePartyImages();
+
     }
 
     public Tuple<List<string>, List<object>> GetChatHistory(string clientTwo)
@@ -145,7 +186,7 @@ public class ChatManager : MonoBehaviour, IChatClientListener
     {
         if (chatUI.activeInHierarchy)
         {
-            if (!string.IsNullOrEmpty(inputFieldText.text)&&Input.GetKeyDown(KeyCode.Return))
+            if (!string.IsNullOrEmpty(inputFieldText.text) && Input.GetKeyDown(KeyCode.Return))
             {
                 SendDirectMessage(currentRecipient, inputFieldText.text);
                 inputFieldText.text = "";
@@ -154,7 +195,7 @@ public class ChatManager : MonoBehaviour, IChatClientListener
     }
 
     public void SendDirectMessage(string recipient, string message)
-    {     
+    {
         chatClient.SendPrivateMessage(recipient, message);
     }
 
@@ -164,13 +205,13 @@ public class ChatManager : MonoBehaviour, IChatClientListener
         chatUI.SetActive(true);
 
         currentRecipient = val;
-        recipientText.text = "Recipient: "+currentRecipient;
+        recipientText.text = "Recipient: " + currentRecipient;
 
         List<string> senders = GetChatHistory(currentRecipient).Item1;
         List<object> messages = GetChatHistory(currentRecipient).Item2;
 
 
-        for(int i = 0; i < senders.Count; i++)
+        for (int i = 0; i < senders.Count; i++)
         {
             chatHistory.text += (senders[i] + ": " + messages[i].ToString() + "\n");
         }
@@ -184,8 +225,8 @@ public class ChatManager : MonoBehaviour, IChatClientListener
         ChatAppSettings chatSettings = PhotonNetwork.PhotonServerSettings.AppSettings.GetChatSettings();
         chatClient.ConnectUsingSettings(chatSettings);
 
-        partyData.SetUserID(username);
-        partyData.AddExpectedUsers(username);
+        PartySystem.SetUserID(username);
+        PartySystem.AddExpectedUsers(username);
     }
 
     private void HandleInviteMessage(string sender)
@@ -193,23 +234,27 @@ public class ChatManager : MonoBehaviour, IChatClientListener
         invitePrefab.GetComponentInChildren<TMP_Text>().text = sender;
         GameObject inviteMsg = Instantiate(invitePrefab, parentInvitePanel);
         Button[] options = inviteMsg.GetComponentsInChildren<Button>();
-        options[0].onClick.AddListener(delegate { AcceptInvite(sender); });
+        options[0].onClick.AddListener(delegate { AcceptInvite(inviteMsg, sender); });
         options[1].onClick.AddListener(delegate { DeclineInvite(inviteMsg); });
     }
 
-    private void AcceptInvite(string sender)
+    private void AcceptInvite(GameObject obj, string sender)
     {
-        if (!partyData.IsInParty())
+        if (!PartySystem.IsInParty())
         {
-            partyData.SetIsPartyLeader(false);
-            partyData.SetInParty(true);
-            partyData.SetPartyLeaderID(sender);
-            inPartyImage.SetActive(true);
+            PartySystem.SetIsPartyLeader(false);
+            PartySystem.SetInParty(true);
+            PartySystem.SetPartyLeaderID(sender);
+            //inPartyImage.SetActive(true);
 
             SendDirectMessage(sender, AcceptInviteMsg);
 
+            ToggleMatchButtons(false);
             ToggleButtons();
+            TogglePartyImages();
         }
+
+        Destroy(obj);
     }
 
     private void DeclineInvite(GameObject obj)
@@ -217,13 +262,23 @@ public class ChatManager : MonoBehaviour, IChatClientListener
         Destroy(obj);
     }
 
+    public void ChangeMapData(string map)
+    {
+        partyMap = map;
+    }
+
+    public void ChangeRoomIndex(int index)
+    {
+        roomIndex = index;
+    }
+
     private void ToggleButtons()
     {
-        if (partyData.IsInParty())
+        if (PartySystem.IsInParty())
         {
             inviteButton.SetActive(false);
 
-            if (currentRecipient == partyData.GetPartyLeaderID())
+            if (currentRecipient == PartySystem.GetPartyLeaderID())
             {
                 leaveButton.SetActive(true);
                 inPartyButton.SetActive(false);
@@ -242,6 +297,33 @@ public class ChatManager : MonoBehaviour, IChatClientListener
         }
     }
 
+    private void ToggleMatchButtons(bool isPartyLeader)
+    {
+        notPartyLeaderButton.SetActive(!isPartyLeader);
+        findMatchButton.SetActive(isPartyLeader);
+    }
+
+    private void TogglePartyImages()
+    {
+        if (PartySystem.IsInParty())
+        {
+            inPartyImage.SetActive(true);
+            deletePartyButton.SetActive(PartySystem.IsPartyLeader());
+        }
+        else
+        {
+            inPartyImage.SetActive(false);
+            deletePartyButton.SetActive(false);
+        }
+    }
+
+    private void FindMatch()
+    {
+        string style = "Duo";
+        string map = partyMap;
+        int roomInd = roomIndex;
+        findMatchSys.FindMatchAsPartyMember(map, style, roomInd);
+    }
     /// <summary>
     /// All debug output of the library will be reported through this method. Print it or put it in a
     /// buffer to use it on-screen.
@@ -293,29 +375,48 @@ public class ChatManager : MonoBehaviour, IChatClientListener
         string[] splitNames = channelName.Split(new char[] { ':' });
         string recipientName = splitNames[1];
 
-        bool serverMsg = false;
         if (username != sender)
         {
             if (message.ToString() == ServerInviteMsg)
             {
                 HandleInviteMessage(sender);
                 chatHistory.text += (sender + " has sent an invite");
+                return;
             }
             if (message.ToString() == AcceptInviteMsg)
             {
-                partyData.AddExpectedUsers(sender);
-                partyData.SetInParty(true);
+                PartySystem.AddExpectedUsers(sender);
+                PartySystem.SetInParty(true);
+                TogglePartyImages();
+                return;
             }
             if (message.ToString() == PartyDeletedMsg)
             {
                 LeaveParty();
+                return;
             }
             if (message.ToString() == PartyMemberLeftMSG)
             {
-                partyData.RemoveFromExpectedUsers(sender);
+                PartySystem.RemoveFromExpectedUsers(sender);
+                return;
+            }
+            if (message.ToString() == FindMatchMSG)
+            {
+                FindMatch();
+                //return;
+            }
+            if (message.ToString().Length > 13 && message.ToString().Substring(0,12) == RoomIndexMsg)
+            {
+                ChangeRoomIndex(Int32.Parse(message.ToString().Substring(13)));
+                return;
+            }
+            if (message.ToString().Length > 11 && message.ToString().Substring(0, 10) == MapDataMsg)
+            {
+                ChangeMapData(message.ToString().Substring(11));
+                return;
             }
         }
-        if (recipientName == currentRecipient && message.ToString() != ServerInviteMsg && message.ToString() != AcceptInviteMsg && message.ToString() != PartyDeletedMsg)
+        if (recipientName == currentRecipient)
         {
             chatHistory.text += (sender + ": " + message.ToString() + "\n");
         }

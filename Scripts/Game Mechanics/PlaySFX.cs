@@ -9,8 +9,6 @@ public class PlaySFX : MonoBehaviour
     public AudioSource audioSource;
     private int floorId = -1;
 
-    public GameObject bulletDecal;
-    public Camera gunCam;
     
     void Start()
     {
@@ -37,18 +35,5 @@ public class PlaySFX : MonoBehaviour
     private void HandgunShoot()
     {
         soundManager.PlayShootingEffect(audioSource, 0);
-        /*RaycastHit hit;
-        if (Physics.Raycast(gunCam.transform.position, gunCam.transform.forward, out hit, 100f))
-        {
-            
-            GameObject newBulletDecal = Instantiate(bulletDecal, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
-            
-
-            Quaternion currentRot = newBulletDecal.GetComponent<Transform>().rotation;
-            
-            currentRot.x = 90f;
-            Debug.Log(currentRot);
-            newBulletDecal.GetComponent<Transform>().rotation=currentRot;
-        }*/
     }
 }

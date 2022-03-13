@@ -76,12 +76,9 @@ public class ControlsScript : MonoBehaviour
         controls.Add("jump", KeyCode.Space);
         controls.Add("open", KeyCode.E);
         controls.Add("grab", KeyCode.G);
-        controls.Add("knife", KeyCode.Alpha1);
-        controls.Add("item2", KeyCode.Alpha2);
-        controls.Add("item3", KeyCode.Alpha3);     
-        controls.Add("kick", KeyCode.C);
+        controls.Add("drop", KeyCode.Z);
+        controls.Add("targetData", KeyCode.Alpha1);
         controls.Add("slide", KeyCode.F);
-        controls.Add("sit", KeyCode.Q);
 
         // immutable keys:
         controls.Add("forward", KeyCode.W);

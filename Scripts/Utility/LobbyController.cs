@@ -17,16 +17,18 @@ public class LobbyController : MonoBehaviourPunCallbacks
     public GameObject changeModeButton;
     public GameObject changeModeConnectingButton;
 
-    public int desiredRoomSize;
+    private int desiredRoomSize;
     private int mapId;
     private int roomIndex = 0;
 
-    public string style;
-    public string map;
+    private string style;
+    private string map;
     public const string MAP_KEY = "map";
 
 
-    public string[] allMaps = { "Zhieltropolis", "Zeliticus", "Zhijulo" };
+    //public string[] allMaps = { "Zhieltropolis", "Zeliticus", "Zhijulo" };
+
+    public ChatManager chatSystem;
 
     private Dictionary<string, int> mapsDictionary = new Dictionary<string, int>()
     {
@@ -46,7 +48,6 @@ public class LobbyController : MonoBehaviourPunCallbacks
 
     public Animator regionAnimator;
 
-    public PartySystem partyData;
 
     public override void OnConnectedToMaster()
     {
@@ -119,6 +120,15 @@ public class LobbyController : MonoBehaviourPunCallbacks
     {
         MapInfoController.currentMap = map;
         MapInfoController.SetMultiplayerMapScene(mapsDictionary[map]);
+
+        if (PartySystem.IsInParty())
+        {
+            for(int i = 0; i < PartySystem.GetExpectedUsers().Length;i++)
+            {
+                chatSystem.SendDirectMessage(PartySystem.GetExpectedUsers()[i], "MapTypeMsg:"+map);
+            }
+            
+        }
         
     }
 
@@ -138,14 +148,28 @@ public class LobbyController : MonoBehaviourPunCallbacks
         roomOps.MaxPlayers = (byte)desiredRoomSize;
         roomOps.CustomRoomProperties = CreateProperties();
 
-        if (!partyData.IsInParty())
+        if (!PartySystem.IsInParty())
         {
             PhotonNetwork.JoinOrCreateRoom(map + " " + style + " " + roomIndex, roomOps, null, null);
         }
         else
         {
-            PhotonNetwork.JoinOrCreateRoom(map + " " + style + " " + roomIndex, roomOps, null, partyData.GetExpectedUsers());
+            for (int i = 0; i < PartySystem.GetExpectedUsers().Length; i++)
+            {
+                chatSystem.SendDirectMessage(PartySystem.GetExpectedUsers()[i], "RoomIndexMsg:" + roomIndex);
+            }
+
+            PhotonNetwork.JoinOrCreateRoom(map + " " + style + " " + roomIndex, roomOps, null, PartySystem.GetExpectedUsers());
+            for (int i = 0; i < PartySystem.GetExpectedUsers().Length; i++)
+            {
+                chatSystem.SendDirectMessage(PartySystem.GetExpectedUsers()[i], "ServerMessage1200");
+            }
         }
+    }
+
+    public void FindMatchAsPartyMember(string map, string style, int roomIndex)
+    {
+        PhotonNetwork.JoinRoom(map + " " + style+" "+roomIndex, null);
     }
 
     public void ChangeRegion(string code)

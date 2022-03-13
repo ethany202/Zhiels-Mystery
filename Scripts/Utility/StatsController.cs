@@ -20,13 +20,18 @@ public class StatsController : MonoBehaviourPunCallbacks
 
     }
 
-    void Update()
+    void Awake()
     {
         if (CustomizedData.showFPS)
         {
-            ShowFPS();
-            ShowPing();
+            InvokeRepeating("ShowFPS", 0f, 5f);
+            //ShowFPS();
+            InvokeRepeating("ShowPing", 0f, 5f);
+            //ShowPing();
         }
+
+
+
     }
 
     void ShowFPS()

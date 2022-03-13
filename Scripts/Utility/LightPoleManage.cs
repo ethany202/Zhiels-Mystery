@@ -13,7 +13,7 @@ public class LightPoleManage : MonoBehaviour
 
     void Update()
     {
-        if(time.GetTimeOfDay()<=4.5f || time.GetTimeOfDay() >= 20f)
+        if(time.GetTimeOfDay()<=7.5f || time.GetTimeOfDay() >= 16f)
         {
             if (!lightsOn)
             {

@@ -6,17 +6,24 @@ public class ObjectProperties : MonoBehaviour
 {
 
     public float volume;
-    public int objectId;    // Determines the type of object(i.e., gun, sword, knife, hammer, box)
 
-    void Start()
+    [Range(1,2)]
+    public int objectType;    // 1 = Unity Object; 2 = Prefab Object
+
+    private float gravity;
+
+    private bool onGround, isHeld;
+
+    public int GetObjectType()
     {
-        
+        return objectType;
     }
 
-    void Update()
+    public void SetIsHeld(bool held)
     {
-        
+        isHeld = held;
     }
+
     public float GetVolume()
     {
         return this.volume;

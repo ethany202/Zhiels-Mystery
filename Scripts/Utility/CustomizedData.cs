@@ -4,41 +4,27 @@ using UnityEngine;
 
 public class CustomizedData : MonoBehaviour
 {
-    private static string skinName = "Malcolm Skin";
+    private static string characterName;
 
     public static float baseSpeed;
-
-    public static float regJumpHeight = 1.5f;
-    public static float sprintJumpHeight = 1.75f;
 
     public static float vision;
 
     public static float weight;
     public static float strength;
-    //public static float flexibility;
 
-    public static int skinType = 0; // 0 = Type 1 Mixamo(Malcolm, remy), 1 = Type 2 Mixamo, 2 = Other
-
-    public static int normalSensitivity;
-    public static int aimSensitivity;
+    public static float normalSensitivity;
+    public static float scopeSensitivity;
 
     public static bool showFPS;
 
-    public static string GetSkinName()
+    public static string GetCharacterName()
     {
-        return skinName;
+        return characterName;
     }
 
-    public static void SetSkinName(string name)
+    public static void SetCharacterName(string name)
     {
-        skinName = name;
-        if(name == "Malcolm Skin")
-        {
-            skinType = 0;
-        }
-        else
-        {
-            skinType = 1;
-        }
+        characterName = name;
     }
 }

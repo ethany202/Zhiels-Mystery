@@ -1,112 +1,118 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 using Photon.Pun;
 
 public class MoveCharacter : MonoBehaviour
 {
-
+    [Header("Character Meta Data")]
     public PhotonView PV;
     public CharacterController character;
     public TPSMouseLook viewObject;
     public Camera camObj;
+    public Animator animator;
 
     // Transforms:
+    [Header("Transform Data Types")]
     public Transform cam;
     public Transform body;
-    public Transform headTarget;
+    //public Transform headTarget;
+    public Transform grabPos;//, carryPos;
+    public Transform cameraPos;
+
+    [Header("GameObject Data Types")]
+    public GameObject phoneObj; // Zhieltropolis
+    public GameObject phoneDisplay;
+
+    public GameObject scrollObj; // Zeliticus
+    public GameObject headGearObj; // Cyberpunk
 
     // Data Values:
     private float knifeVal = 0f;
     private float crouchingVal = 0f;
     private float velocityNormalized = 0f;
+    private float carryingVal = 0f;
+    private float targetData = 0f;
+    private float playerHealth = 100f;
 
-    // Data Values:
-    private float baseSpeed = 3f;
-    private float sprintSpeed = 4f;
-    private float regJumpHeight = 1;
-    private float sprintJumpHeight = 1;
+    // Presets:
+    [Header("Character Presets")]
+    public float baseSpeed = 3f;
+    public float sprintSpeed = 6f;
+    public float jumpHeight = 0.3f;
+    public float weight;
+    public float strength;
+    public float visionScore;
 
-    private float weight;
-    private float strength;
-    private float moveSpeed;
-    private float currentJumpHeight;
-    private float gravity;
-
-
-    [Range(0, 1)] public float rightDistanceToGround;
+    /*[Range(0, 1)] public float rightDistanceToGround;
     [Range(0, 1)] public float leftDistanceToGround;
-    [Range(0, 1)] private float headIKWeight = 0;
-    public LayerMask layerMask;
+    [Range(0, 1)] private float headIKWeight = 0f;
+    public LayerMask layerMask;*/
 
     // Animation:
-    public Animator animator;
+
+    private float characterHeight = 0f;
+    private float gravity;
+    private float moveSpeed;
 
     private Vector3 moveDir;
-
-    private bool isJumping;
     private bool holdingKnife;
     private bool holdingGun;
-    private bool isCrouching;
+    private bool grabbingObject;
 
-    public GameObject defaultKnife;
-    public GameObject bulletDecal;
-    // public GameObject bulleteffect;
+    private ObjectProperties handObject;
+    private Transform objectBody;
 
     void Start()
     {
-        InitializePresets();
+        targetData = (float)MapInfoController.multiplayerMapScene - 3f;
+
+        animator.SetFloat(AnimationParameters.floats["targetData"], targetData);
+
+        viewObject.SetNormalSensitivity(75f);
+        viewObject.SetScopeSensitivity(50f);
+        viewObject.SetVision(visionScore*200);
 
         moveSpeed = baseSpeed;
-        currentJumpHeight = regJumpHeight;
+        characterHeight = character.height;
 
-        isJumping = false;
-        holdingKnife = false;
         if (!PV.IsMine)
         {
             camObj.enabled = false;
+            camObj.GetComponent<AudioListener>().enabled = false;
         }
-    }
-
-    public void InitializePresets()
-    {
-        baseSpeed = CustomizedData.baseSpeed;
-        sprintSpeed = baseSpeed * 2.5f;
-
-        regJumpHeight = CustomizedData.regJumpHeight;
-        sprintJumpHeight = CustomizedData.sprintJumpHeight;
-
-        strength = CustomizedData.strength;
-        weight = CustomizedData.weight;
-
-        viewObject.SetVision(CustomizedData.vision);
-        viewObject.SetSensitivity(CustomizedData.normalSensitivity);
     }
 
     void Update()
     {
         if (PV.IsMine)
         {
-            NormalMovement();         
+            NormalMovement();
             CheckCrouch();
             CheckJump();
-            Punch();
-            Kick();
-            HoldKnife();
             CallGravity();
             Aim();
-            Shoot();
+            Attack();
+            DropObject();
             CheckIdle();
+            CheckTargetData();
             viewObject.Rotate();
-        }       
+            cam.position = cameraPos.position;
+        }
     }
 
     public void NormalMovement()
     {
+        if (animator.GetBool(AnimationParameters.parameters["checkingTargetData"]))
+        {
+            return;
+        }
+
         float vertical = Input.GetAxis("Vertical");
         float horizontal = Input.GetAxis("Horizontal");
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
-        if (direction.magnitude >= 0.1f)
+        if (direction.magnitude >= 0.01f)
         {
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
             moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
@@ -119,6 +125,7 @@ public class MoveCharacter : MonoBehaviour
             {
                 if (!Input.GetKey(ControlsConstants.keys["crouch"]))
                 {
+                    moveSpeed = baseSpeed;
                     animator.SetBool(AnimationParameters.parameters["isMoving"], true);
                     CheckSprint();
                 }
@@ -137,7 +144,10 @@ public class MoveCharacter : MonoBehaviour
         {
             ResetAnimations("isCrouching");
             moveSpeed = baseSpeed / 2f;
-            //character.center = new Vector3(0, 1.5f, 0);
+            if (characterHeight == character.height)
+            {
+                character.height *= 0.8f;
+            }
             if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.S))
             {
                 if (crouchingVal < 1f)
@@ -156,6 +166,10 @@ public class MoveCharacter : MonoBehaviour
                 animator.SetFloat(AnimationParameters.floats["crouching"], crouchingVal);
             }
         }
+        else
+        {
+            character.height = characterHeight;
+        }
     }
 
     private void CheckSprint()
@@ -170,11 +184,7 @@ public class MoveCharacter : MonoBehaviour
                 {
                     velocityNormalized += 0.1f;
                 }
-                while (moveSpeed < sprintSpeed)
-                {
-                    moveSpeed += 0.2f;
-                }
-                currentJumpHeight = sprintJumpHeight;
+                moveSpeed = sprintSpeed;
                 animator.SetFloat(AnimationParameters.floats["velocityNormalized"], 1f);
             }
         }
@@ -184,11 +194,7 @@ public class MoveCharacter : MonoBehaviour
             {
                 velocityNormalized -= 0.1f;
             }
-            while (moveSpeed > baseSpeed)
-            {
-                moveSpeed -= 0.5f;
-            }
-            currentJumpHeight = regJumpHeight;
+            moveSpeed = baseSpeed;
             animator.SetFloat(AnimationParameters.floats["velocityNormalized"], velocityNormalized);
         }
     }
@@ -197,58 +203,124 @@ public class MoveCharacter : MonoBehaviour
     {
         if (Input.GetKeyDown(ControlsConstants.keys["jump"]))
         {
-            if (!isJumping)
+            if (!Input.GetKey(KeyCode.S))
             {
-                isJumping = true;
-                if (!Input.GetKey(KeyCode.S))
-                {
-                    animator.SetTrigger(AnimationParameters.triggers["jump"]);
-                    //character.Move(new Vector3(0f, currentJumpHeight, 0f));
-                    moveSpeed = 0;
-                }
+                animator.SetTrigger(AnimationParameters.triggers["jump"]);
+                moveSpeed = 0;
             }
         }
-        if (!Input.GetKeyDown(ControlsConstants.keys["jump"]))
+    }
+
+    private void GrabObject()
+    {
+        if (Input.GetKeyDown(ControlsConstants.keys["grab"]))
         {
-            isJumping = false;
+            PV.RPC("UpdatePosition", RpcTarget.AllBuffered, null);   
+        }
+    }
+
+    [PunRPC]
+    private void UpdatePosition()
+    {
+        if (objectBody != null)
+        {
+            grabbingObject = true;
+            objectBody.GetComponent<Rigidbody>().isKinematic = true;
+
+            Transform prefabObj = null;
+            int idIndex = objectBody.name.IndexOf("{");
+            if (idIndex == -1)
+            {
+                prefabObj = grabPos.Find(objectBody.name);
+            }
+            else
+            {
+                prefabObj = grabPos.Find(objectBody.name.Substring(0, idIndex));
+            }
+
+            objectBody.position = prefabObj.position;
+            objectBody.rotation = prefabObj.rotation;
+
+            objectBody.parent = grabPos;
+
+            if (prefabObj.gameObject.CompareTag("Knife"))
+            {
+                holdingKnife = true;
+            }
+            if (prefabObj.gameObject.CompareTag("Pistol"))
+            {
+                holdingGun = true;
+                //gunBody = objectBody.gameObject;
+            }
+        }
+        
+    }
+
+    public void ResetCharacterHeight()
+    {
+        character.height = characterHeight;
+    }
+
+    private void DropObject()
+    {
+        if (grabbingObject)
+        {
+            if (Input.GetKeyDown(ControlsConstants.keys["drop"]))
+            {
+                grabbingObject = false;
+                holdingKnife = false;
+                holdingGun = false;
+
+                objectBody.SetParent(null);
+
+                //objectBody.GetComponent<Rigidbody>().isKinematic = false;
+                carryingVal = 0f;
+                animator.SetFloat(AnimationParameters.floats["carrying"], carryingVal);
+
+                PV.RPC("ReleaseObject", RpcTarget.AllBufferedViaServer, objectBody.name);
+
+                objectBody = null;
+                handObject = null;
+
+            }
+        }
+    }
+
+    [PunRPC]
+    private void ReleaseObject(string objectName)
+    {
+        //Destroy(GameObject.Find(objectName));   
+        GameObject obj = GameObject.Find(objectName);
+        obj.transform.SetParent(null);
+        obj.GetComponent<Rigidbody>().isKinematic = false;
+        //obj.name = obj.name.Substring(LoadSceneLogic.playerID.Length + 1);
+        //Instantiate(objectBody, objectBody.position, objectBody.rotation);
+    }
+
+    public void Attack()
+    {
+        if (Input.GetKeyDown(ControlsConstants.keys["attack"]))
+        {
+            if (holdingGun)
+            {
+                Shoot();
+            }
+            else
+            {
+                Punch();
+            }
         }
     }
 
     public void Punch()
     {
-        if (Input.GetKeyDown(ControlsConstants.keys["attack"])) // change later
+        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
         {
-            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
-            {
-                animator.SetTrigger(AnimationParameters.triggers["punch"]);
-            }
-            else
-            {
-                animator.SetTrigger(AnimationParameters.triggers["idlePunch"]);
-            }
+            animator.SetTrigger(AnimationParameters.triggers["punch"]);
         }
-    }
-
-    public void Kick()
-    {
-        if (Input.GetKeyDown(ControlsConstants.keys["kick"]))
+        else
         {
-            animator.SetTrigger(AnimationParameters.triggers["kick"]);
-            moveSpeed = 0;
-        }
-        if (!Input.GetKeyDown(ControlsConstants.keys["kick"]))
-        {
-            animator.ResetTrigger(AnimationParameters.triggers["kick"]);
-            moveSpeed = baseSpeed;
-        }
-    }
-
-    public void HoldKnife()
-    {
-        if (Input.GetKeyDown(ControlsConstants.keys["knife"]))
-        {
-            holdingKnife = !holdingKnife;
-            defaultKnife.SetActive(holdingKnife);
+            animator.SetTrigger(AnimationParameters.triggers["idlePunch"]);
         }
     }
 
@@ -256,71 +328,31 @@ public class MoveCharacter : MonoBehaviour
     {
         if (Input.GetKey(ControlsConstants.keys["scope"]) && holdingGun)
         {
-            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.LeftShift))
-            {
-                animator.SetBool(AnimationParameters.parameters["halfAiming"], true);
-            }
-            else
-            {
-                animator.SetBool(AnimationParameters.parameters["halfAiming"], false);
-                animator.SetBool(AnimationParameters.parameters["isAiming"], true);
-            }
+            animator.SetBool(AnimationParameters.parameters["isAiming"], true);
         }
         else
         {
-            animator.SetBool(AnimationParameters.parameters["halfAiming"], false);
             animator.SetBool(AnimationParameters.parameters["isAiming"], false);
         }
     }
 
-    public void Shoot()
+    private void Shoot(){animator.SetTrigger(AnimationParameters.triggers["shoot"]);}
+
+    private void Bullet()
     {
-        if (Input.GetKeyDown(ControlsConstants.keys["attack"]) && holdingGun)
+        /*RaycastHit hit;
+        if (Physics.Raycast(gunBody.transform.position, gunBody.transform.right, out hit, 100f))
         {
-            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.LeftShift))
-            {
-                animator.SetTrigger(AnimationParameters.triggers["halfShoot"]);
-            }
-            else
-            {
-                animator.SetTrigger(AnimationParameters.triggers["shoot"]);
-            }
-        }
-        /*if (Input.GetKeyDown(KeyCode.Mouse0) && holdingPistol)
-        {
-            bool hasProperGun = false;
-            for (int i = 0; i < inventoryItems.Length; i++)
-            {
-                if (inventoryItems[i] == gunId)
-                {
-                    hasProperGun = true;
-                    break;
-                }
-            }
-            if (hasProperGun)
-            {
-                animator.SetTrigger(AnimationParameters.parameters[gunId]);
-                /*RaycastHit hit;
-                 * if (Physics.Raycast(gunCam.transform.position, gunCam.transform.forward, out hit, range)
-                 * {
-                 * Debug.Log(hit.transform.name);
-                 * Instantiate(bulletEffect, hit.point, Quaternion.LookRotation(hit.normal));
-                 *Instantiate(bulletDecal, hit.point, Quaternion.FromToRotation(Vector3.up, hit.normal));
-                 *
-                 *
-                 * }
-                 
-            }
-        }
-        if (Input.GetKeyUp(KeyCode.Mouse0) && holdingGun)
-        {
-            animator.ResetTrigger(AnimationParameters.parameters[gunId]);
+            Vector3 point = hit.point;
+            point.x += 0.002f;
+            point.y += 0.002f;
+            point.z += 0.002f;
+            GameObject newBulletDecal = Instantiate(bulletDecal, point, Quaternion.FromToRotation(Vector3.back, hit.normal));
         }*/
     }
 
     public void CheckIdle()
     {
-
         if (!Input.anyKey)
         {
             ResetTriggers();
@@ -328,48 +360,85 @@ public class MoveCharacter : MonoBehaviour
             animator.SetBool(AnimationParameters.parameters["isIdle"], true);
             if (holdingKnife)
             {
-                if (knifeVal < 1f)
-                {
-                    knifeVal += 0.1f;
-                }
+                knifeVal = (knifeVal < 1f) ? knifeVal+0.1f : 1f;
+                carryingVal = (carryingVal < 1f) ? carryingVal+0.1f : 1f;
                 animator.SetFloat(AnimationParameters.floats["knife"], knifeVal);
+                animator.SetFloat(AnimationParameters.floats["carrying"], carryingVal);
             }
             else
             {
-                if (knifeVal > 0f)
-                {
-                    knifeVal -= 0.1f;
-                }
+                knifeVal = (knifeVal>0f) ? knifeVal-0.1f : 0f;
+                //carryingVal = 0f;
                 animator.SetFloat(AnimationParameters.floats["knife"], knifeVal);
+                //animator.SetFloat(AnimationParameters.floats["carrying"], carryingVal);
             }
         }
         else
         {
             animator.SetBool(AnimationParameters.parameters["isIdle"], false);
+            //
+        }
+
+    }
+
+    private void CheckTargetData()
+    {
+        if (LoadSceneLogic.playerRole != 0)
+        {
+            return;
+        }
+
+        if (Input.GetKeyDown(ControlsConstants.keys["targetData"]))
+        {
+            if (MapInfoController.multiplayerMapScene == 3)
+            {
+                phoneDisplay.SetActive(true);
+                phoneObj.SetActive(true);
+                animator.SetBool(AnimationParameters.parameters["checkingTargetData"], !animator.GetBool(AnimationParameters.parameters["checkingTargetData"]));
+            }
+        }
+        if(Input.GetKeyUp(ControlsConstants.keys["targetData"]))
+        {
+            if (MapInfoController.multiplayerMapScene == 3)
+            {
+                phoneDisplay.SetActive(false);
+                phoneObj.SetActive(false);
+            }
         }
 
     }
 
     public void CallGravity()
     {
-        if (!character.isGrounded)
+        if (character.isGrounded)
         {
-            Vector3 fall = new Vector3(0f, gravity, 0f);
-            character.Move(fall * Time.deltaTime);
+            return;
+        }
+        else if (!character.isGrounded)
+        {
+            character.Move(new Vector3(0f, gravity, 0f) * Time.deltaTime);
             gravity -= (0.5f);
         }
+
         if (character.isGrounded && gravity < 0)
+        {
             gravity = -1f;
+        }
     }
 
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
+        if (hit.collider.tag == "Object" && hit.transform.parent!=null)
+        {
+            playerHealth -= 10f;
+            LoadSceneLogic.GetHealthText().GetComponent<TMP_Text>().text = playerHealth + "";
+        }
+
         Rigidbody body = hit.collider.attachedRigidbody;
         if (body == null || body.isKinematic)
             return;
-        Vector3 pushDir = new Vector3(2 * moveSpeed * weight * hit.moveDirection.x, 9.8f * hit.moveDirection.y, 2 * moveSpeed * weight * hit.moveDirection.z);
+        Vector3 pushDir = new Vector3(moveSpeed * weight * hit.moveDirection.x * 0.5f, 9.8f * hit.moveDirection.y * 0.5f, moveSpeed * weight * hit.moveDirection.z * 0.5f);
         body.AddForceAtPosition(pushDir / Mathf.Sqrt(body.mass), hit.point);
-
     }
 
     public void ResetAnimations()
@@ -400,23 +469,26 @@ public class MoveCharacter : MonoBehaviour
         }
     }
 
-    void OnAnimatorIK()
+    /*void OnAnimatorIK()
     {
         if (animator)
         {
-            FootIKPlacement();
-            HeadIKTilt();
-            
+            //InitializeFootIKWeights();
+            //FootIKPlacement();
+            //HeadIKTilt();
         }
+    }*/
+
+    /*private void InitializeFootIKWeights()
+    {
+        animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 0.5f);
+        animator.SetIKRotationWeight(AvatarIKGoal.LeftFoot, 0.5f);
+        animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, 0.5f);
+        animator.SetIKRotationWeight(AvatarIKGoal.RightFoot, 0.5f);
     }
 
     private void FootIKPlacement()
     {
-        animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 1f);
-        animator.SetIKRotationWeight(AvatarIKGoal.LeftFoot, 1f);
-        animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, 1f);
-        animator.SetIKRotationWeight(AvatarIKGoal.RightFoot, 1f);
-
         RaycastHit hit;
         Ray ray = new Ray(animator.GetIKPosition(AvatarIKGoal.LeftFoot) + Vector3.up, Vector3.down);
         if (Physics.Raycast(ray, out hit, rightDistanceToGround + 1f, layerMask))
@@ -439,14 +511,48 @@ public class MoveCharacter : MonoBehaviour
 
     private void HeadIKTilt()
     {
-        if (moveDir.x == 0 && moveDir.y == 0 && moveDir.z == 0 && animator.GetBool("isIdle"))
+        if (moveDir.x == 0 && moveDir.y == 0 && moveDir.z == 0)
         {
-            animator.SetLookAtWeight(0.75f);
+            if (headIKWeight < 0.7f)
+                headIKWeight += 0.01f;
+            animator.SetLookAtWeight(headIKWeight);
             animator.SetLookAtPosition(headTarget.position);
         }
         else
         {
-            animator.SetLookAtWeight(0f);
+            if (headIKWeight > 0f)
+                headIKWeight -= 0.01f;
+            animator.SetLookAtWeight(headIKWeight);
+        }
+    }*/
+
+    void OnTriggerStay(Collider other)
+    {
+        if (other.tag == "Object")
+        {
+            if (!grabbingObject)
+            {
+                //grabInstructions.SetActive(true);
+                handObject = other.GetComponent<ObjectProperties>();
+                objectBody = other.GetComponent<Transform>();
+                GrabObject();
+            }
+            else
+            {
+                //grabInstructions.SetActive(false);
+            }
+        }
+        if (other.tag == "Region")
+        {
+
+        }
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (other.tag == "Object")
+        {
+            //grabInstructions.SetActive(false);
         }
     }
 

@@ -10,19 +10,20 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 {
     public GameObject playerLeftMessage;
     public GameObject avatarError;
-    public GameObject notLoggedIn;
 
     public TMP_Text currentUser;
 
     public RawImage profileImage;
 
     protected Callback<GameOverlayActivated_t> m_GameOverlayActivated;
-    void Start()
+    protected Callback<AvatarImageLoaded_t> avatarImageLoaded;
+
+    private CSteamID steamID;
+
+    void Awake()
     {
-
         Cursor.lockState = CursorLockMode.None;
-
-        SteamAPI.Init();
+        Cursor.visible = true;
         if (SteamManager.Initialized)
         {
             LoadSteamInfo();
@@ -39,9 +40,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         }
         else
         {
-            notLoggedIn.SetActive(true);
+            Application.Quit();
         }
-        
     }
 
     public void ConnectToPhoton()
@@ -54,16 +54,16 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     private void LoadSteamInfo()
     {
-        CSteamID steamId = SteamUser.GetSteamID();
+        steamID = SteamUser.GetSteamID();
 
         currentUser.text = SteamFriends.GetPersonaName();
 
-        int imageId = SteamFriends.GetLargeFriendAvatar(steamId);
+        int imageId = SteamFriends.GetLargeFriendAvatar(steamID);
         
         if(imageId == -1)
         {
-            imageId = SteamFriends.GetLargeFriendAvatar(steamId);
             avatarError.SetActive(true);
+            return;
         }
 
         profileImage.texture = GetSteamImage(imageId);
@@ -88,6 +88,16 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         }
 
         return texture;
+    }
+
+    private void OnAvatarImageLoaded(AvatarImageLoaded_t callback)
+    {
+        if(callback.m_steamID.ToString() != steamID.ToString())
+        {
+            return;
+        }
+
+        profileImage.texture = GetSteamImage(callback.m_iImage);
     }
 
     private void OnGameOverlayActivated(GameOverlayActivated_t pCallback)

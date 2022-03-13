@@ -143,10 +143,10 @@ public class SkillsPresets : MonoBehaviour
 
     public void SetConstants()
     {
-        CustomizedData.baseSpeed = (recordedValues["speed"]/3.0f) * 1.17f;
+        CustomizedData.baseSpeed = (recordedValues["speed"]/3.0f) * 1.16f;
 
         CustomizedData.vision = 400f + ((recordedValues["vision"] - 3) * 10);
-        CustomizedData.weight = Mathf.Sqrt(recordedValues["weight"] / 3.0f) * 90;
+        CustomizedData.weight = Mathf.Sqrt(recordedValues["weight"] / 3.0f) * 60;
 
         //CustomizedData.flexibility = recordedValues["flexibility"];
         CustomizedData.strength = recordedValues["strength"];

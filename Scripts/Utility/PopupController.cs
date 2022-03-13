@@ -8,14 +8,7 @@ public class PopupController : MonoBehaviour
 {
 
     public GameObject popup;
-    private bool isOpen;
-
-    void Start()
-    {
-        isOpen = false;
-        popup.SetActive(false);
-
-    }
+    private bool isOpen = false;
 
     void Update()
     {
@@ -44,5 +37,10 @@ public class PopupController : MonoBehaviour
     public void ExitGame()
     {
         Application.Quit();
+    }
+
+    public void LeaveGame()
+    {
+        SceneManager.LoadSceneAsync(0);
     }
 }

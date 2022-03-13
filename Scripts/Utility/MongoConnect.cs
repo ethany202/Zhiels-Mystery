@@ -11,9 +11,9 @@ using TMPro;
 public class MongoConnect : MonoBehaviour
 {
 
-    private const string MONGO_URI; // Include URI
-    private const string DATABASE_NAME; // Include DB name
-    private const string COLLECTION_NAME; // Include collection name
+    private const string MONGO_URI = "mongodb://player:i44OVrrVaWHVcM2H@userdata-shard-00-00.fz2wm.mongodb.net:27017,userdata-shard-00-01.fz2wm.mongodb.net:27017,userdata-shard-00-02.fz2wm.mongodb.net:27017/myFirstDatabase?ssl=true&replicaSet=atlas-98aj6c-shard-0&authSource=admin&retryWrites=true&w=majority";
+    private const string DATABASE_NAME = "UserDataDB";
+    private const string COLLECTION_NAME = "UserDataCollection";
     private MongoClient client;
     private IMongoDatabase db;
     private IMongoCollection<BsonDocument> collection;
@@ -30,20 +30,19 @@ public class MongoConnect : MonoBehaviour
 
     void Start()
     {
-
-            InitializeDatabase();
-
-            id = SteamUser.GetSteamID().ToString();
+        InitializeDatabase();
+        id = SteamUser.GetSteamID().ToString();
         latestName = SteamFriends.GetPersonaName();
-            VerifyUser();
+        VerifyUser();
     }
 
     void OnGUI()
     {
         int retrievedCurrency = (int)pipeline.GetValue("currency");
+        
         if (retrievedCurrency != currency)
         {
-            currencyText.text = "Current Amount:\n\n" + currency + " Quetzal";
+            currencyText.text = "Balance:  " + currency + " Q";
         }
     }
 
@@ -59,7 +58,7 @@ public class MongoConnect : MonoBehaviour
         else
         {
             currency = (int)pipeline.GetValue("currency");
-            currencyText.text = "Current Amount:\n\n" + currency + " Quetzal";
+            currencyText.text = "Balance:  " + currency + " Q";
         }
         SetValue(id, "latest name", latestName);
     }

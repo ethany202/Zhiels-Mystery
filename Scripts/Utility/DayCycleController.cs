@@ -13,6 +13,11 @@ public class DayCycleController : MonoBehaviour
 
     void Update()
     {
+        Cycle();
+    }
+
+    private void Cycle()
+    {
         timeOfDay += Time.deltaTime * orbitSpeed;
         if (timeOfDay >= 24)
         {

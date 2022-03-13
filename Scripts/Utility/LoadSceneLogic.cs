@@ -1,30 +1,38 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class LoadSceneLogic : MonoBehaviour
 {
 
     public static int playerRole; // 0 = hitman, 1 = detectives
-    //public static Vector3 spawnLocation;
+    public static string playerName;
+    public static string playerID;
 
-    //public static Vector3 hitmanSpawn = new Vector3(-153.155f, 7.809834f, 18.51f);
-    // public static Vector3 detectiveSpawn = new Vector3(-106.18f, 7.805f, 36.495f);
+    public static Dictionary<string, GameObject> scenePlayers = new Dictionary<string, GameObject>();
+    public static List<GameObject> criminals = new List<GameObject>();
 
-    /*void Start()
+    private static GameObject districtText;
+    private static GameObject healthText;
+
+    public static GameObject GetDistrictText()
     {
-        SetSpawnLocation();
-    }*/
+        return districtText;
+    }
 
-    /*public static void SetSpawnLocation()
+    public static GameObject GetHealthText()
     {
-        if(playerRole == 0)
-        {
-            spawnLocation = hitmanSpawn;
-        }
-        if(playerRole == 1)
-        {
-            spawnLocation = detectiveSpawn;
-        }
-    }*/
+        return healthText;
+    }
+
+    public static void SetDistrictText(GameObject text)
+    {
+        districtText = text;
+    }
+
+    public static void SetHealthBarUI(GameObject newText)
+    {
+        healthText = newText;
+    }
 }

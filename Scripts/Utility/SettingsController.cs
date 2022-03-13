@@ -67,8 +67,8 @@ public class SettingsController : MonoBehaviour
         }
         else
         {
-            isFull = true;
-            Screen.fullScreen = isFull;
+            //isFull = true;
+            //Screen.fullScreen = isFull;
             windowSettings.text = "FULLSCREEN";
             QualityProperties.SetFullscreen(true);
         }
@@ -144,8 +144,8 @@ public class SettingsController : MonoBehaviour
         }
         else
         {
-            AudioSettings.SetMusicVolume(100);
-            SetMusicVolume(1f);
+            AudioSettings.SetMusicVolume(50);
+            SetMusicVolume(0.5f);
         }
         if(PlayerPrefs.HasKey(steamId+" SFX Volume"))
         {
@@ -218,18 +218,6 @@ public class SettingsController : MonoBehaviour
             SetIdleTime(5);
         }
         #endregion
-
-        #region Effects
-        if(PlayerPrefs.HasKey(steamId+" Effects Quality"))
-        {
-            int effectsID = PlayerPrefs.GetInt(steamId + " Effects Quality");
-            SetEffectsQuality(effectsID);
-        }
-        else
-        {
-            SetEffectsQuality(1);
-        }
-        #endregion
     }
 
 
@@ -266,6 +254,7 @@ public class SettingsController : MonoBehaviour
 
     public void QuitGame()
     {
+        
         Application.Quit();
     }
 
@@ -292,6 +281,8 @@ public class SettingsController : MonoBehaviour
     public void ChangeNormalSensitivity(float val)
     {
         normalSensitivity.value = val;
+        CustomizedData.normalSensitivity = val;
+
         ChangeNormalSensitivity();
     }
 
@@ -386,9 +377,16 @@ public class SettingsController : MonoBehaviour
 
     public void PopulateOptions()
     {
-        for (int i = 0; i < resolutions.Length; i++)
+        HashSet<Resolution> resolutionsSet = new HashSet<Resolution>(resolutions);
+        /*for (int i = 0; i < resolutions.Length; i++)
         {
             resolutionOptions.options.Add(new TMP_Dropdown.OptionData(resolutions[i].width + " x " + resolutions[i].height));
+        }
+        resolutionOptions.onValueChanged.AddListener(delegate { ChangeResolution(currentResolutionLabel); });*/
+
+        foreach(Resolution currentRes in resolutionsSet)
+        {
+            resolutionOptions.options.Add(new TMP_Dropdown.OptionData(currentRes.width + " x " + currentRes.height));
         }
         resolutionOptions.onValueChanged.AddListener(delegate { ChangeResolution(currentResolutionLabel); });
     }
@@ -591,36 +589,7 @@ public class SettingsController : MonoBehaviour
         SetPlayerPrefs(steamId + " showFPSText", text);
     }
 
-    public TMP_Text effectsQualityText;
-    public void SetEffectsQuality(int val)
-    {
-        int particleRaycastBudget = 0;
-        string effectsText="";
-        if (val == 0)
-        {
-            QualitySettings.particleRaycastBudget = 144;
-            particleRaycastBudget = 144;
-            effectsText = "low";
-        }
-        if (val == 1)
-        {
-            QualitySettings.particleRaycastBudget = 200;
-            particleRaycastBudget = 200;
-            effectsText = "medium";
-        }
-        if (val == 2)
-        {
-            QualitySettings.particleRaycastBudget = 256;
-            particleRaycastBudget = 256;
-            effectsText = "high";
-        }
 
-        effectsQualityText.text = effectsText;
-
-        SetPlayerPrefs(steamId + " Effects Quality", particleRaycastBudget);
-
-        QualityProperties.SetParticleRaycastBudget(particleRaycastBudget);
-    }
 
 
     public void OpenWebsite()
@@ -660,7 +629,6 @@ public class SettingsController : MonoBehaviour
 
         SetIdleTime(5);
 
-        SetEffectsQuality(1);
     }
 
     public void SetPlayerPrefs(string key, float val)

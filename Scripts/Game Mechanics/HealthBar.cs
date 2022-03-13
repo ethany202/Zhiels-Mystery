@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,18 +8,50 @@ public class HealthBar : MonoBehaviour
 {
 
     public float maxHealth = 100f;
-    public Image healthBar;
-    public float characterCurrentHealth;
-    public PlayerMovement player;
+    private Image healthBar;
+    private TMP_Text healthText;
+    public float characterCurrentHealth=100f;
 
-    void Start()
+    public void InitializeUI()
     {
-        healthBar = GetComponent<Image>();
+        healthBar = GameObject.FindWithTag("HealthFill").GetComponent<Image>();
+        healthText = GameObject.FindWithTag("HealthText").GetComponent<TMP_Text>();
     }
 
-    void Update()
+    public void SetCurrentHealth(float val)
     {
-        characterCurrentHealth = player.GetHealth();
+        characterCurrentHealth = val;
         healthBar.fillAmount = characterCurrentHealth / maxHealth;
+        healthText.text = characterCurrentHealth+"";
+    }
+
+    public float GetCurrentHealth()
+    {
+        return characterCurrentHealth;
+    }
+
+    public void IncreaseHealth(float val)
+    {
+        if (val + characterCurrentHealth > 100f)
+        {
+            SetCurrentHealth(100f);
+        }
+        else
+        {
+            SetCurrentHealth(characterCurrentHealth + val);
+        }
+        
+    }
+
+    public void DecreaseHealth(float increment)
+    {
+        if (characterCurrentHealth - increment < 0)
+        {
+            SetCurrentHealth(0f);
+        }
+        else
+        {
+            SetCurrentHealth(characterCurrentHealth - increment);
+        }
     }
 }
