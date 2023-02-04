@@ -6,6 +6,7 @@ using UnityEngine.VFX;
 public class Gun : MonoBehaviour
 {
 
+    private ObjectProperties gunBody;
     public int bulletDamage;
 
     [Header("Recoil Objects")]
@@ -38,10 +39,11 @@ public class Gun : MonoBehaviour
     public float fullMagAmmo;
     public float currentMagAmmo;
 
-    private void Start()
-    {
-        UpdateAmmoText();
-    }
+    //private void Start()
+    //{
+    //    SetGunAmmo();
+    //    UpdateAmmoText();
+    //}
 
     private void Update()
     {
@@ -92,9 +94,13 @@ public class Gun : MonoBehaviour
     private void Bullet()
     {
         RaycastHit hit;
+
+        
+
         if (Physics.Raycast(physicalCam.position, physicalCam.forward, out hit, 50f))
         {
-            if(hit.collider.tag == "Character")
+
+            if (hit.collider.tag == "Character")
             {
                 DealDamage(hit.transform);
                 GameObject bloodSplat = Instantiate(bloodEffect, hit.point, Quaternion.identity);
@@ -152,6 +158,7 @@ public class Gun : MonoBehaviour
             GetComponent<Animator>().SetTrigger("reload");
         }
 
+        UpdateGunAmmo();
         UpdateAmmoText();
     }
 
@@ -161,5 +168,25 @@ public class Gun : MonoBehaviour
 
         TMP_Text ammoTxt = GetComponentInChildren<TMP_Text>();
         ammoTxt.text = (currentMagAmmo + "/" + (fullMagAmmo * (totalMags - 1)));
+    }
+
+    private void UpdateGunAmmo()
+    {
+        gunBody.SetCurrentMagAmmo(currentMagAmmo);
+        gunBody.SetTotalMags(totalMags);
+    }
+
+    private void SetGunAmmo()
+    {
+        this.currentMagAmmo = gunBody.GetCurrentMagAmmo();
+        this.totalMags = gunBody.GetTotalMags();
+    }
+
+    public void SetGunBody(ObjectProperties gunBody)
+    {
+        this.gunBody = gunBody;
+
+        SetGunAmmo();
+        UpdateAmmoText();
     }
 }

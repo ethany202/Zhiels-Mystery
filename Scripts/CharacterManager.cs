@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class CharacterManager : MonoBehaviour
 {
-
-    private const float WALK_TIME_INTERVAL = 1.5f;
-    private const float SPRINT_TIME_INTERVAL = 1f;
 
     [Header("Character Meta Data")]
     public CharacterController character;
@@ -16,18 +14,20 @@ public class CharacterManager : MonoBehaviour
     public TPSMouseLook viewObject;
     public Animator anim;
     public Transform body;
-    public Transform bodyTarget;
     public Transform grabPos;
 
-    [Header("FPS Objects")]
-    public GameObject rifleArms;
-    public GameObject pistolArms;
-    public GameObject syringeArms;
+    [Header("Player-Specific UI")]
+    public Image bloodFrame;
+    public Image bloodSplatter;
+    public Image deathFade;
+    public GameObject blackScreen;
 
     // Speed Types
-    private float baseSpeed = 1f;
-    private float sprintSpeed = 2f;
-    private float crouchSpeed = 0.65f;
+    [Header("Primitive Attributes")]
+    public float baseSpeed = 1f;
+    public float sprintSpeed = 1.75f;
+    public float crouchSpeed = 0.65f;
+    public float slideSpeed = 2.65f;
     public float currentSpeed;
     private Vector3 moveDir;
 
@@ -35,21 +35,20 @@ public class CharacterManager : MonoBehaviour
     private float stepHeight;
     private float gravity = 0f;
 
-    [SerializeField] private float slideSpeed = 2.5f;
-    [SerializeField] private bool isSliding = false;
+    private bool isSliding = false;
     private bool isCrouching = false;
+    public bool isMoving = false;
 
-    private float health=100f;
+    private float health = 100f;
     public float Health { get => health; set => DisplayPlayerHealth(value); }
-    public int syringeCount=0;
 
-    private bool grabbingObject;
-    private Transform objectBody;
+
+    // -50
 
     private void Awake()
     {
         LoadSceneLogic.player = this;
-        LoadSaveState();
+        LoadSaveState();       
     }
 
     private void Start()
@@ -63,6 +62,7 @@ public class CharacterManager : MonoBehaviour
         {
             ControlsConstants.SetDefaultKeys();
         }
+        InvokeRepeating("RegenerateHealth", 0f, 2f);
     }
 
     private void Update()
@@ -72,9 +72,6 @@ public class CharacterManager : MonoBehaviour
 
         viewObject.Rotate();
         AddGravity();
-
-        UseSyringe();
-        DropObject();
     }
 
     private void Walk()
@@ -86,11 +83,12 @@ public class CharacterManager : MonoBehaviour
 
         if (direction.magnitude >= 0.25f)
         {
+            isMoving = true;
+
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
             moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
 
             InitiateWalkSpeed();
-
             Sprint();
             Crouch();
 
@@ -104,14 +102,12 @@ public class CharacterManager : MonoBehaviour
             }
             else
             {
-                //currentSpeed = baseSpeed;
+
             }
             character.Move(moveDir.normalized * currentSpeed * Time.deltaTime);
         }
         else
         {
-            //character.Move(moveDir.normalized * -(currentSpeed/2) * Time.deltaTime);
-            //moveDir = Vector3.zero;
             ResetAnimations();
         }
     }
@@ -121,14 +117,9 @@ public class CharacterManager : MonoBehaviour
         currentSpeed = baseSpeed;
     }
 
-    private void InitiateCrouchSpeed()
-    {
-        currentSpeed = baseSpeed / 2f;
-    }
-
     private void Sprint()
     {
-        if (Input.GetKey(KeyCode.LeftShift))
+        if (Input.GetKey(ControlsConstants.keys["sprint"]))
         {
             anim.SetBool("isSprinting", true);
             currentSpeed = sprintSpeed;
@@ -139,39 +130,31 @@ public class CharacterManager : MonoBehaviour
             anim.SetBool("isWalking", true);
             anim.SetBool("isSprinting", false);
         }
-        
     }
 
     private void Crouch()
     {
-        if (Input.GetKeyDown(KeyCode.LeftControl))
+        if (Input.GetKeyDown(ControlsConstants.keys["crouch"]))
         {
             character.height = characterHeight / 3;
             character.stepOffset = 0;
 
-            //InitiateCrouchSpeed();
             isCrouching = true;
             anim.SetBool("isCrouching", true);
         }
-        if (Input.GetKeyUp(KeyCode.LeftControl))
+        if (Input.GetKeyUp(ControlsConstants.keys["crouch"]))
         {
             character.height = characterHeight;
             character.stepOffset = stepHeight;
 
-            //InitiateWalkSpeed();
             isCrouching = false;
             anim.SetBool("isCrouching", false);
         }
     }
 
-    private void Jump()
-    {
-
-    }
-
     private void Slide()
     {
-        if (Input.GetKeyDown(KeyCode.F))
+        if (Input.GetKeyDown(ControlsConstants.keys["slide"]))
         {
             StartCoroutine(CallSliding());
         }
@@ -191,28 +174,6 @@ public class CharacterManager : MonoBehaviour
         anim.SetBool("isSliding", false);
     }
 
-    private void UseSyringe()
-    {
-        if (syringeCount == 0) { return; }
-
-        if (Input.GetKeyDown(KeyCode.Alpha4)) 
-        {
-            syringeArms.SetActive(true);
-        }
-    }
-
-    public void SyringeInjected()
-    {
-        Health += 40f;
-        if (Health > 100f)
-        {
-            Health = 100f;
-        }
-
-        syringeCount--;
-    }
-
-
     private void AddGravity()
     {
         if (character.isGrounded)
@@ -224,6 +185,12 @@ public class CharacterManager : MonoBehaviour
             character.Move(new Vector3(0f, gravity, 0f));
             gravity -= (0.2f * Time.deltaTime);
         }
+
+        // Check if player fell thru map
+        if(transform.position.y <= -200f)
+        {
+            SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().buildIndex);
+        }
     }
 
     private void ResetAnimations()
@@ -233,59 +200,10 @@ public class CharacterManager : MonoBehaviour
         anim.SetBool("isCrouching", false);
     }
 
-    //private void CheckIdle()
-    //{
-    //    if (!Input.anyKey)
-    //    {
-    //        ResetAnimations();
-    //    }
-    //}
-
-    private void GrabObject()
-    {
-        if (Input.GetKeyDown(ControlsConstants.keys["grab"]))
-        {
-            if (objectBody.gameObject.layer == LayerMask.NameToLayer("Syringe"))
-            {
-                LoadSceneLogic.DisplayInstructions(false);
-
-                objectBody.gameObject.SetActive(false);
-                syringeCount++;
-                return;
-            }
-
-            UpdatePosition();
-            grabbingObject = true;
-        }
-    }
-
-
-    private void UpdatePosition()
-    {
-        if (objectBody != null)
-        {
-            if (objectBody.gameObject.layer == LayerMask.NameToLayer("Holdable Object"))
-            {
-                PhysicalKeyProperties playerKeyCopy = cam.GetComponentInChildren<PhysicalKeyProperties>(true);
-                playerKeyCopy.gameObject.SetActive(true);
-                playerKeyCopy.SetKeyID(objectBody.GetComponent<PhysicalKeyProperties>().GetKeyID());
-            }
-            if(objectBody.gameObject.layer== LayerMask.NameToLayer("Rifle"))
-            {
-                rifleArms.SetActive(true);
-            }
-            if (objectBody.gameObject.layer == LayerMask.NameToLayer("Pistol"))
-            {
-                pistolArms.SetActive(true);
-            }
-            objectBody.gameObject.SetActive(false);
-            LoadSceneLogic.DisplayInstructions(false);
-        }
-    }
 
     public void LoadSaveState()
     {
-        if(LoadSceneLogic.savedGame)
+        if(LoadSceneLogic.savedGame && SceneManager.GetActiveScene().buildIndex == LoadSceneLogic.examPhase)
         {
             SaveData data = SaveSystem.LoadPlayerState();
             Vector3 position = new Vector3(data.playerPosition[0], data.playerPosition[1], data.playerPosition[2]);
@@ -295,63 +213,42 @@ public class CharacterManager : MonoBehaviour
         }
     }
 
-    private void DropObject()
-    {
-        if (grabbingObject)
-        {
-            if (Input.GetKeyDown(ControlsConstants.keys["drop"]))
-            {
-                grabbingObject = false;
-
-                objectBody.position = grabPos.position;
-                objectBody.gameObject.SetActive(true);
-
-                objectBody = null;
-
-                rifleArms.SetActive(false);
-                //meleeArms.SetActive(false);
-                pistolArms.SetActive(false);
-                
-                cam.GetComponentInChildren<PhysicalKeyProperties>(true).gameObject.SetActive(false);
-            }
-        }
-    }
-
-    void OnTriggerStay(Collider other)
-    {
-        if (other.tag == "Object")
-        {
-            if (!grabbingObject)
-            {
-                LoadSceneLogic.DisplayInstructions(true);
-                LoadSceneLogic.ChangeInstructionsText(ControlsConstants.keys["grab"].ToString());
-                objectBody = other.GetComponent<Transform>();
-                GrabObject();
-            }
-            else
-            {
-                LoadSceneLogic.DisplayInstructions(false);
-            }
-        }
-    }
-
-    void OnTriggerExit(Collider other)
-    {
-        if (other.tag == "Object")
-        {
-            LoadSceneLogic.DisplayInstructions(false);
-        }
-    }
-
     private void DisplayPlayerHealth(float healthInput)
     {
         if (healthInput <= 0f)
         {
-            // Call Restart level method;
             healthInput = 0f;
+            blackScreen.SetActive(true);
+
+            SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().buildIndex);
         }
 
         this.health = healthInput;
-        LoadSceneLogic.GetHealthText().GetComponent<TMP_Text>().text = this.health + "";
+        DamageFadeIn(this.health);
+    }
+
+    private void DamageFadeIn(float currentHealth)
+    {
+        float alphaCode = 1f - (currentHealth / 100f);
+
+        Color splatterAlpha = bloodSplatter.color;
+        splatterAlpha.a = alphaCode / 10f;
+        bloodSplatter.color = splatterAlpha;
+
+        Color frameAlpha = bloodFrame.color;
+        frameAlpha.a = alphaCode / 3f;
+        bloodFrame.color = frameAlpha;
+
+        Color deathAlpha = deathFade.color;
+        deathAlpha.a = alphaCode;
+        deathFade.color = deathAlpha;
+    }
+
+    private void RegenerateHealth()
+    {
+        if (Health < 100f)
+        {
+            Health = Mathf.Min(Health + 2f, 100f);
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class OpenCloseObject : MonoBehaviour
 {
@@ -6,10 +7,11 @@ public class OpenCloseObject : MonoBehaviour
     public bool lockedDoor = true;
 
     public BombDefuse bomb;
+    public LightSwitchManager switchManager;
 
     private const string VALID_KEY_ID = "C4";
 
-    private CharacterManager playerBody;
+    private CharacterManager playerBody; 
 
     private void OnTriggerStay(Collider other)
     {
@@ -45,7 +47,7 @@ public class OpenCloseObject : MonoBehaviour
 
     private void ManageKeyAttempt(Collider other)
     {
-        PhysicalKeyProperties physicalKey = playerBody.GetComponentInChildren<PhysicalKeyProperties>();
+        PhysicalKeyProperties physicalKey = playerBody.GetComponentInChildren<PhysicalKeyProperties>(true);
         if (physicalKey != null)
         {
             if (physicalKey.GetKeyID() == VALID_KEY_ID)
@@ -53,6 +55,8 @@ public class OpenCloseObject : MonoBehaviour
                 //anim.SetTrigger("OpenClose");
                 anim.SetBool("isOpen", !anim.GetBool("isOpen"));
                 bomb.SetDefusable(true);
+
+                switchManager.stagePassed = true;            
             }
             Debug.Log(physicalKey.GetKeyID());
 

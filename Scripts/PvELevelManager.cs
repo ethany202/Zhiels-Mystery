@@ -5,15 +5,24 @@ using UnityEngine;
 public class PvELevelManager : MonoBehaviour
 {
 
+    public bool checkProceedStage;
+
     public int remainingNPCs;
     public MazeElevator physicalElevator;
-    
+
+    public ElevatorMovement elevatorMvt;
+
     public void CheckLevelComplete()
     {
         if (remainingNPCs == 0)
         {
             physicalElevator.SetStageCompleted(true);
-            Debug.Log("Level Completed");
+
+            if (checkProceedStage)
+            {
+                elevatorMvt.levelCleared = true;
+                physicalElevator.ChangeOperate(true);
+            }
         }
     }
 }

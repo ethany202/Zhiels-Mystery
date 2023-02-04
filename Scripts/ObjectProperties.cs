@@ -5,27 +5,46 @@ using UnityEngine;
 public class ObjectProperties : MonoBehaviour
 {
 
-    public float volume;
+    public float totalMags;
+    public float fullMagAmmo;
+    public float currentMagAmmo;
 
-    [Range(1,2)]
-    public int objectType;    // 1 = Unity Object; 2 = Prefab Object
+    public AudioSource bodySource;
+    public AudioClip dropClip;
 
-    private float gravity;
-
-    private bool onGround, isHeld;
-
-    public int GetObjectType()
+    public float GetTotalMags()
     {
-        return objectType;
+        return totalMags;
     }
 
-    public void SetIsHeld(bool held)
+    public float GetFullMagAmmo()
     {
-        isHeld = held;
+        return fullMagAmmo;
     }
 
-    public float GetVolume()
+    public float GetCurrentMagAmmo()
     {
-        return this.volume;
+        return currentMagAmmo;
     }
+
+    public void SetTotalMags(float totalMags)
+    {
+        this.totalMags = totalMags;
+    }
+
+    public void SetFullMagAmmo(float fullMagAmmo)
+    {
+        this.fullMagAmmo=fullMagAmmo;
+    }
+
+    public void SetCurrentMagAmmo(float currentMagAmmo)
+    {
+        this.currentMagAmmo=currentMagAmmo;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        bodySource.PlayOneShot(dropClip);
+    }
+
 }

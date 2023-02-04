@@ -7,7 +7,7 @@ public class TPSMouseLook : MonoBehaviour
     [Header("Camera Movement Variables")]
     public Camera cam;
     public Transform player;
-    public float normalSensitivity = 35f;
+    // public float normalSensitivity = 35f;
     public float xRotation = 0f;
 
     [Header("Camera Shake Variables")]
@@ -24,10 +24,10 @@ public class TPSMouseLook : MonoBehaviour
     {
         float mouseX = Input.GetAxis("Mouse X") * Time.deltaTime; // Right/left motion
         float mouseY = Input.GetAxis("Mouse Y") * Time.deltaTime; // forward/backward motion
-        xRotation -= (mouseY * normalSensitivity);                                // xRotation represents looking along the x-axis(up/down vision)
+        xRotation -= (mouseY * CustomizedData.normalSensitivity);                                // xRotation represents looking along the x-axis(up/down vision)
         xRotation = Mathf.Clamp(xRotation, -55f, 70f);      // Clamps movement of the mouse by preventing it from going beyond -90 and 90 degrees
         transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-        player.Rotate(Vector3.up * mouseX * normalSensitivity);     // Rotates player
+        player.Rotate(Vector3.up * mouseX * CustomizedData.normalSensitivity);     // Rotates player
     }
 
     public void SetVision(float farView)
@@ -35,10 +35,10 @@ public class TPSMouseLook : MonoBehaviour
         cam.farClipPlane = farView;
     }
 
-    public void SetNormalSensitivity(float val)
-    {
-        normalSensitivity = val;
-    }
+    //public void SetNormalSensitivity(float val)
+    //{
+    //    normalSensitivity = val;
+    //}
 
     public IEnumerator ShakeCamera()
     {
@@ -54,6 +54,26 @@ public class TPSMouseLook : MonoBehaviour
         }
 
         transform.position = startPosition;
+    }
+
+    public IEnumerator DamageShake(float duration, float magnitude)
+    {
+        Vector3 originalPos = transform.localPosition;
+        float elapsed = 0.0f;
+
+        while (elapsed < duration)
+        {
+            float x = Random.Range(-1f, 1f) * magnitude;
+            float y = Random.Range(-1f, 1f) * magnitude;
+
+            transform.localPosition = new Vector3(x, y, originalPos.z);
+
+            elapsed += Time.deltaTime;
+
+            yield return null;
+        }
+
+        transform.localPosition = originalPos;
     }
 
 }

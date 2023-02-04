@@ -4,7 +4,7 @@ using System;
 
 public class DigitalLock : MonoBehaviour
 {
-    private const string SEQUENCE = "1413";
+    public string SEQUENCE = "7885";
     private int guessCount = 0;
 
     public TMP_Text codeInput;
@@ -18,6 +18,8 @@ public class DigitalLock : MonoBehaviour
     public AudioSource doorUnlock;
     public AudioClip unlockSFX;
     public AudioClip keypadSFX;
+
+    public RadioController radio;
 
     private void OnGUI()
     {
@@ -76,6 +78,11 @@ public class DigitalLock : MonoBehaviour
             {
                 codeInput.text = "";
                 guessCount++;
+
+                if (guessCount % 3 == 0)
+                {
+                    radio.PlayVoiceLine();
+                }
             }
             LockStatus(false);
         }

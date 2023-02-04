@@ -7,7 +7,12 @@ public class MazeElevator : MonoBehaviour
 {
 
     public Animator elevatorDoors;
+
     private bool stageCompleted = false;
+    private bool canOperate = true;
+
+    public AudioSource elevatorAudio;
+    public AudioClip closeElevatorDoor;
 
     private void Start()
     {
@@ -17,11 +22,11 @@ public class MazeElevator : MonoBehaviour
         }
     }
 
-    private void OnTriggerStay(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
         if (other.GetComponent<CharacterManager>() != null)
         {
-            if (stageCompleted)
+            if (stageCompleted && canOperate)
             {
                 elevatorDoors.SetBool(Animator.StringToHash("openElevator"), true);
             }
@@ -32,8 +37,20 @@ public class MazeElevator : MonoBehaviour
     {
         if (other.GetComponent<CharacterManager>() != null)
         {
-            elevatorDoors.SetBool(Animator.StringToHash("openElevator"), false);
+            LowerDoor();
         }
+    }
+
+    public void LowerDoor()
+    {
+        elevatorDoors.SetBool(Animator.StringToHash("openElevator"), false);
+        //elevatorAudio.Stop();
+        elevatorAudio.PlayOneShot(closeElevatorDoor);
+    }
+
+    public void ChangeOperate(bool operate)
+    {
+        canOperate = operate;
     }
 
     public bool IsStageCompleted()
@@ -45,4 +62,5 @@ public class MazeElevator : MonoBehaviour
     {
         this.stageCompleted = stageCompleted;
     }
+
 }

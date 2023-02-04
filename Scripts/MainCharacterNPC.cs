@@ -16,6 +16,7 @@ public class MainCharacterNPC : MonoBehaviour
     private void Start()
     {
         agent.SetDestination(finalDest.position);
+        anim.SetBool(AnimationParameters.parameters["isWalking"], true);
     }
 
     private void OnTriggerEnter(Collider other)

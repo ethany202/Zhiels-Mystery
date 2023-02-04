@@ -7,6 +7,11 @@ public class AudioController : MonoBehaviour
 
     private AudioSource[] audioSources;
 
+    private void Awake()
+    {
+        Debug.Log(AudioSettings.GetSFXVolume());
+    }
+
     public void SetAllVolume()
     {
         audioSources = GameObject.FindObjectsOfType<AudioSource>();

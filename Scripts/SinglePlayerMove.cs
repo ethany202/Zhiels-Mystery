@@ -47,7 +47,7 @@ public class SinglePlayerMove : MonoBehaviour
     {
         examHandler = GetComponent<ExamHandler>();
         
-        viewObject.SetNormalSensitivity(CustomizedData.normalSensitivity);
+        // viewObject.SetNormalSensitivity(CustomizedData.normalSensitivity);
         viewObject.SetVision(visionScore * 200);
 
         moveSpeed = baseSpeed;

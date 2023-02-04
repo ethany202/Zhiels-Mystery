@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class PlayerInitScript : MonoBehaviour
 {
-    public GameObject avatarError, loadSavedScene, startButton;
+    public GameObject avatarError, loadSavedScene, startButton, deleteMask;
 
     public TMP_Text currentUser;
 
@@ -34,6 +34,11 @@ public class PlayerInitScript : MonoBehaviour
         {
             Application.Quit();
         }
+    }
+
+    private void Update()
+    {
+        HandleSaveData();   
     }
 
     private void LoadSteamInfo()
@@ -118,12 +123,20 @@ public class PlayerInitScript : MonoBehaviour
         if (playerData != null)
         {
             startButton.SetActive(false);
+
+            deleteMask.SetActive(false);
             loadSavedScene.SetActive(true);
+
             LoadSceneLogic.savedGame = true;
             LoadSceneLogic.examPhase = playerData.examPhase;
         }
         else
         {
+            startButton.SetActive(true);
+
+            deleteMask.SetActive(true);
+            loadSavedScene.SetActive(false);
+
             LoadSceneLogic.savedGame = false;
         }
     }
@@ -131,5 +144,10 @@ public class PlayerInitScript : MonoBehaviour
     public void LoadSavedGame()
     {        
         SceneManager.LoadSceneAsync(LoadSceneLogic.examPhase);
+    }
+
+    public void DeleteSave()
+    {
+        SaveSystem.DeleteSave();
     }
 }

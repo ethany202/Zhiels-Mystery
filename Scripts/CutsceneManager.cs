@@ -9,37 +9,60 @@ public class CutsceneManager : MonoBehaviour
 
     public GameObject spawnMask;
     public GameObject character;
+    public GameObject firstCar;
+    public GameObject funkyMusic;
+
+    public GameObject tvCanvas;
+
     public Transform pos;
+
+    [Header("TV Clip")]
+    public AudioSource tvSource;
+    public AudioClip messageNewton;
+
+    private void Start()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
 
     private void ActivateCamera2()
     {
         camera2.SetActive(true);
-        //camera1.SetActive(false);
-        StartCoroutine(DelayDeactivate(camera1));
+        camera1.SetActive(false);
     }
 
-    private IEnumerator DelayDeactivate(GameObject obj)
+    private IEnumerator DelayDeactivate(GameObject obj, float time)
     {
-        yield return new WaitForSecondsRealtime(0.1f);
+        yield return new WaitForSecondsRealtime(time);
         obj.SetActive(false);
     }
 
     private void ActivateCamera3()
     {
         camera3.SetActive(true);
-        //camera2.SetActive(false);
-        StartCoroutine(DelayDeactivate(camera2));
+        firstCar.SetActive(false);
+        StartCoroutine(DelayDeactivate(camera2, 0.025f));
+    }
 
+    private void PlayNewtonAudio()
+    {
+        tvCanvas.SetActive(true);
+        tvSource.PlayOneShot(messageNewton);
     }
 
     private void ActivateSpawnMask()
     {
-        //spawnMask.SetActive(true);
         character.SetActive(true);
-        //CreatePlayer();
-        camera3.SetActive(false);
-        //StartCoroutine(DelayDeactivate(camera1));
+        //camera3.SetActive(false);
+        StartCoroutine(DelayDeactivate(camera3, 0.025f));
+        funkyMusic.SetActive(false);
+    }
 
+    private void DeactivateTV()
+    {
+        tvCanvas.SetActive(false);
+        tvSource.Pause();
     }
 
     public void CreatePlayer()

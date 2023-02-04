@@ -25,8 +25,8 @@ public class DiceManager : MonoBehaviour
 
     private void Awake()
     {
-        redRotations = new Vector3[5] { new Vector3(270f, UnityEngine.Random.Range(0f, 180f), 0f), new Vector3(0, 45f, -90f), new Vector3(180f, 90f, 0f), new Vector3(180f, UnityEngine.Random.Range(0f, 270f), 180f), new Vector3(90, UnityEngine.Random.Range(0f, 45f), 0f) };
-        blueRotations = new Vector3[5] { new Vector3(0f, UnityEngine.Random.Range(0f, 360f), 0f), new Vector3(-90f, 90f, 0f), new Vector3(-90f, UnityEngine.Random.Range(0f, 360f), 0f), new Vector3(90f, UnityEngine.Random.Range(0f, 180f), 180f), new Vector3(270f, UnityEngine.Random.Range(0f, 90f), 0f)};
+        redRotations = new Vector3[10] { new Vector3(270f, UnityEngine.Random.Range(0f, 180f), 0f), new Vector3(0, 45f, -90f), new Vector3(180f, 90f, 0f), new Vector3(180f, UnityEngine.Random.Range(0f, 270f), 180f), new Vector3(-90, UnityEngine.Random.Range(0, 90f), 0f), new Vector3(0f, 90f, 90f), new Vector3(0f, 90f, 0f), new Vector3(-90f, 90f, 0f), new Vector3(-180f, 0f, 90f), new Vector3(90, UnityEngine.Random.Range(0f, 45f), 0f) };
+        blueRotations = new Vector3[10] { new Vector3(0f, UnityEngine.Random.Range(0f, 360f), 0f), new Vector3(-90f, 90f, 0f), new Vector3(-90f, UnityEngine.Random.Range(0f, 360f), 0f), new Vector3(90f, UnityEngine.Random.Range(0f, 180f), 180f), new Vector3(270f, UnityEngine.Random.Range(0f, 90f), 0f), new Vector3(0f,0f,0f), new Vector3(0f, 90f, 180f), new Vector3(90f, UnityEngine.Random.Range(0f, 180f), 180f), new Vector3(0f, 90f, 180f), new Vector3(270f, UnityEngine.Random.Range(0f, 90f), 0f)};
     }
 
 

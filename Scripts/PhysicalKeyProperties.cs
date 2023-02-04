@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PhysicalKeyProperties : MonoBehaviour
 {
@@ -9,6 +10,8 @@ public class PhysicalKeyProperties : MonoBehaviour
 
     public AudioSource audioSource;
     public AudioClip dropSound;
+
+    public GameObject keyUI;
 
     public void SetKeyID(string newID)
     {
@@ -31,6 +34,10 @@ public class PhysicalKeyProperties : MonoBehaviour
         audioSource.PlayOneShot(dropSound);
     }
 
+    public GameObject GetKeyUI()
+    {
+        return keyUI;
+    }
     /*private void OnTriggerStay(Collider other)
     {
         if (other.tag == "Player")

@@ -5,10 +5,20 @@ using UnityEngine;
 public class Syringe : MonoBehaviour
 {
 
-    public CharacterManager characterBody;
+    public ItemManager characterItem;
+
+    public AudioSource source;
+    public AudioClip syringeSFX;
 
     private void SyringeInjected()
     {
-        characterBody.SyringeInjected();
+        characterItem.SyringeInjected();
     }
+
+    private void PlayEffect()
+    {
+        source.PlayOneShot(syringeSFX);
+    }
+
+
 }

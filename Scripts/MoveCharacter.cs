@@ -70,7 +70,7 @@ public class MoveCharacter : MonoBehaviour
 
         animator.SetFloat(AnimationParameters.floats["targetData"], targetData);
 
-        viewObject.SetNormalSensitivity(75f);
+        // viewObject.SetNormalSensitivity(75f);
         viewObject.SetVision(visionScore*200);
 
         moveSpeed = baseSpeed;

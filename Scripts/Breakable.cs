@@ -9,6 +9,9 @@ public class Breakable : MonoBehaviour
     public float explosionRadius = 2.0f;
     public float upwardsModifier = 3.0f;
 
+    public AudioSource source;
+    public AudioClip explodeSFX;
+
     public void ExplodeObject()
     {
         var rbs = GetComponentsInChildren<Rigidbody>();
@@ -17,6 +20,9 @@ public class Breakable : MonoBehaviour
             rb.isKinematic = false;
             rb.AddExplosionForce(explosionForce, transform.position, explosionRadius, upwardsModifier, ForceMode.Impulse);
         }
+
+        if (source != null) { source.PlayOneShot(explodeSFX); }
+        
     }
 
 }

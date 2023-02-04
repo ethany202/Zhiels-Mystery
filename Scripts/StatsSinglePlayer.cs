@@ -1,5 +1,8 @@
 using UnityEngine;
 using TMPro;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 
 public class StatsSinglePlayer : MonoBehaviour
 {
@@ -7,17 +10,10 @@ public class StatsSinglePlayer : MonoBehaviour
     public GameObject fpsUI;
     public TMP_Text fpsText;
 
-    void Start()
+    void Update()
     {
         fpsUI.SetActive(CustomizedData.showFPS);
-    }
-
-    void Awake()
-    {
-        if (CustomizedData.showFPS)
-        {
-            InvokeRepeating("ShowFPS", 0f, 1f);
-        }
+        ShowFPS();
     }
 
     void ShowFPS()

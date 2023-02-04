@@ -11,12 +11,9 @@ public class LoadSceneLogic : MonoBehaviour
 
     public static CharacterManager player;
 
-    public static Dictionary<string, GameObject> scenePlayers = new Dictionary<string, GameObject>();
-
     private static GameObject healthText;
-    private static GameObject instructions;
-
-    public static Transform spawnPos;
+    private static GameObject instructionsPrimary;
+    private static GameObject instructionsSecondary;
 
     public static GameObject GetHealthText()
     {
@@ -28,32 +25,63 @@ public class LoadSceneLogic : MonoBehaviour
         healthText = newText;
     }
 
-    public static void SetInstructionsGameObject(GameObject obj)
+    public static void SetInstructions(GameObject obj)
     {
-        instructions = obj;
+        instructionsPrimary = obj;
     }
 
     public static void DisplayInstructions(bool value)
     {
-        if (instructions == null)
+        if (instructionsPrimary == null)
         {
             return;
         }
-        instructions.SetActive(value);
+        instructionsPrimary.SetActive(value);
     }
 
     public static void ChangeInstructionsText(string value)
     {
-        if (instructions == null)
+        if (instructionsPrimary == null)
         {
             return;
         }
-        instructions.GetComponentInChildren<TMP_Text>().text = value;
+
+        if (value.Length > 4)
+        {
+            value = value.Substring(0, 4);
+        }
+
+        instructionsPrimary.GetComponentInChildren<TMP_Text>().text = value;
     }
 
-    public static void RestartCombatStage()
+    // Secondary instructions
+
+    public static void SetInstructionsSecondary(GameObject obj)
     {
-        SceneManager.LoadScene(2);
-        player.body.position = spawnPos.position;
+        instructionsSecondary = obj;
+    }
+
+    public static void DisplayInstructionsSecondary(bool value)
+    {
+        if (instructionsSecondary == null)
+        {
+            return;
+        }
+        instructionsSecondary.SetActive(value);
+    }
+
+    public static void ChangeInstructionsTextSecondary(string value)
+    {
+        if (instructionsSecondary == null)
+        {
+            return;
+        }
+
+        if (value.Length > 4)
+        {
+            value = value.Substring(0, 4);
+        }
+
+        instructionsSecondary.GetComponentInChildren<TMP_Text>().text = value;
     }
 }

@@ -1,9 +1,11 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.VFX;
 
-public class SWAT : MonoBehaviour, INPCTemplate
+public class BodyguardNPC : MonoBehaviour, INPCTemplate
 {
+
     [Header("Movement Components")]
     public Animator anim;
     public Camera swatHead;
@@ -11,22 +13,19 @@ public class SWAT : MonoBehaviour, INPCTemplate
 
     [Header("Misc.")]
     public PvELevelManager levelManager;
-    public GameObject gun;
-    public VisualEffect muzzleVFX;
-    public AudioSource gunSource, bodySource;
-    public AudioClip handgunSFX;
+    public GameObject baton;
+
+    [Header("Audio Objects")]
+    public AudioSource audioSource, bodySource;
     public AudioClip runningSFX;
-    public AudioClip[] groanSFX;
+    public AudioClip slashSFX;
+    public AudioClip slashHitSFX;
     public string targetName;
 
-    [Header("Shooting Objects")]
-    public GameObject bulletDecal;
-    public GameObject bloodEffect;
-    public float aimStationary = 0.85f;
-    public float aimMoving = 0.3f;
-
     private Transform currentDest;
-    private int health = 100;
+    private int health = 150;
+
+    private bool voiceLinePlayed = false;
 
     void Update()
     {
@@ -34,11 +33,6 @@ public class SWAT : MonoBehaviour, INPCTemplate
         {
             Patrol();
         }
-    }
-
-    private void Running()
-    {
-        bodySource.PlayOneShot(runningSFX);
     }
 
     private void Patrol()
@@ -49,7 +43,6 @@ public class SWAT : MonoBehaviour, INPCTemplate
         {
             return;
         }
-
         else
         {
             currentDest = currentPlayer.transform;
@@ -58,56 +51,39 @@ public class SWAT : MonoBehaviour, INPCTemplate
 
         if (currentDest != null)
         {
-            DetermineFiring();
+            DetermineAttacking();
         }
     }
 
-    void DetermineFiring()
+    void DetermineAttacking()
     {
         if (agent.remainingDistance <= agent.stoppingDistance)
         {
             anim.SetBool(AnimationParameters.parameters["isRunning"], false);
-            anim.SetBool("isFiring", true);
+            anim.SetBool("isAttacking", true);
         }
         else
         {
             anim.SetBool(AnimationParameters.parameters["isRunning"], true);
-            anim.SetBool("isFiring", false);
+            anim.SetBool("isAttacking", false);
         }
-        
         Vector3 forward = currentDest.transform.position - transform.position;
         Quaternion rot = Quaternion.LookRotation(forward);
         rot.z = rot.x = 0;
         transform.localRotation = rot;
     }
 
-    private void GunFire()
+    void Slash()
     {
-        muzzleVFX.Play();
-        gunSource.PlayOneShot(handgunSFX);
-
-        float hitValue = Random.Range(0.1f, 1f);
-
-        if ((!LoadSceneLogic.player.isMoving && hitValue <= aimStationary) || (hitValue <= aimMoving))
-        {
-            LoadSceneLogic.player.Health -= 10f;
-        }
-        
-        else
-        {
-            RaycastHit hit;
-            if (Physics.Raycast(swatHead.transform.position, swatHead.transform.forward, out hit, 50f))
-            {
-                Vector3 point = hit.point;
-                point.x += 0.0002f;
-                point.y += 0.0002f;
-                point.z += 0.0002f;
-                GameObject newBulletDecal = Instantiate(bulletDecal, point, Quaternion.FromToRotation(Vector3.back, hit.normal));
-
-                Destroy(newBulletDecal, 30f);
-            }
-        }   
+        audioSource.PlayOneShot(slashHitSFX);
+        LoadSceneLogic.player.Health -= 20f;
     }
+
+    private void Running()
+    {
+        bodySource.PlayOneShot(runningSFX);
+    }
+
 
     public void SetHealth(int newHealth)
     {
@@ -125,14 +101,13 @@ public class SWAT : MonoBehaviour, INPCTemplate
                 anim.SetTrigger(Animator.StringToHash("death"));
 
                 agent.isStopped = true;
-                GetComponent<CapsuleCollider>().enabled=false;
+                GetComponent<CapsuleCollider>().enabled = false;
+                GetComponent<CapsuleCollider>().center -= new Vector3(0f, 100f, 0f);
 
                 levelManager.remainingNPCs--;
                 levelManager.CheckLevelComplete();
 
-                DropGun();
-
-                Groan();
+                DropBaton();
             }
         }
     }
@@ -145,23 +120,17 @@ public class SWAT : MonoBehaviour, INPCTemplate
     private void ResetAnimations()
     {
         anim.SetBool(AnimationParameters.parameters["isRunning"], false);
-        anim.SetBool("isFiring", false);
+        anim.SetBool("isAttacking", false);
     }
 
-    private void DropGun()
+    private void DropBaton()
     {
-        gun.GetComponent<Rigidbody>().isKinematic = false;
-        gun.transform.SetParent(null);
+        baton.GetComponent<Rigidbody>().isKinematic = false;
+        baton.transform.SetParent(null);
     }
 
     public string GetTargetName()
     {
         return targetName;
-    }
-
-    private void Groan()
-    {
-        int index = Random.Range(0, groanSFX.Length);
-        bodySource.PlayOneShot(groanSFX[index]);
     }
 }

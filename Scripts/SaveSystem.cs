@@ -5,13 +5,16 @@ using System.Text;
 
 public static class SaveSystem
 {
+
+    private static string path = Application.persistentDataPath + "/yan.txt";
+
     public static void SavePlayerState(CharacterManager player)
     {
-       
+        Debug.Log("SAVING STATE");
+
         SaveData data = new SaveData(player);
 
         string json = JsonUtility.ToJson(data);
-        string path = Application.persistentDataPath + "/yan.txt";
 
         try
         {
@@ -35,8 +38,6 @@ public static class SaveSystem
 
     public static SaveData LoadPlayerState()
     {
-        string path = Application.persistentDataPath + "/yan.txt";
-
         if (File.Exists(path))
         {
             string json = File.ReadAllText(path);
@@ -46,5 +47,22 @@ public static class SaveSystem
             return data;
         }
         return null;
+    }
+
+    public static void DeleteSave()
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+                Debug.Log("File Deleted");
+            }
+        }
+        catch(Exception e)
+        {
+            Debug.Log(e.ToString());
+        }
+        
     }
 }

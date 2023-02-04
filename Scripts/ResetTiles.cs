@@ -7,6 +7,9 @@ public class ResetTiles : MonoBehaviour
     public Transform[] wallParents;
     public RowInstaller[] rowTriggers;
 
+    public AudioClip resetButton;
+    public AudioSource resetButtonSource;
+
     private void OnTriggerStay(Collider other)
     {
         if (other.tag == "Player")
@@ -18,6 +21,8 @@ public class ResetTiles : MonoBehaviour
             {
                 button.SetTrigger("pressed");
                 ResetWalls();
+
+                resetButtonSource.PlayOneShot(resetButton);
             }
         }
     }
@@ -40,6 +45,12 @@ public class ResetTiles : MonoBehaviour
             for (int j = 0; j < walls.Length; j++)
             {
                 walls[j].SetBool("isOpen", false);
+
+                //AudioSource wallAudio = walls[j].GetComponent<AudioSource>();
+
+                //wallAudio.pitch += 0.4f;
+                //wallAudio.PlayOneShot(tileLower);
+                
             }
         }
     }

@@ -19,9 +19,16 @@ public class MafiaBossNPC : MonoBehaviour, INPCTemplate
     
     [Header("Audio Objects")]
     public AudioSource audioSource;
+    public AudioSource bodySource;
     public AudioClip stepSFX;  
     public AudioClip handgunSFX;
+    public AudioClip[] groanSFX;
 
+    [Header("Shooting Objects")]
+    public GameObject bulletDecal;
+    public GameObject bloodEffect;
+    public float aimStationary = 0.85f;
+    public float aimMoving = 0.3f;
 
     public string targetName;
 
@@ -45,17 +52,17 @@ public class MafiaBossNPC : MonoBehaviour, INPCTemplate
     private void Patrol()
     {
         CharacterManager currentPlayer = LoadSceneLogic.player;
-        Vector3 viewPos = swatHead.WorldToViewportPoint(currentPlayer.transform.position);
 
         if (currentPlayer.tag != targetName)
         {
             return;
         }
 
-        if (viewPos.x > 0f && viewPos.y > 0 && viewPos.z > 0 && viewPos.x < 1f && viewPos.y < 1f)
+        else
         {
-            currentDest = currentPlayer.bodyTarget.transform;
-            agent.SetDestination(currentPlayer.transform.position);
+
+            currentDest = currentPlayer.transform;
+            agent.SetDestination(currentDest.position);
         }
 
         if (currentDest != null)
@@ -90,6 +97,28 @@ public class MafiaBossNPC : MonoBehaviour, INPCTemplate
     {
         muzzleVFX.Play();
         audioSource.PlayOneShot(handgunSFX);
+
+        float hitValue = Random.Range(0.1f, 1f);
+
+        if ((!LoadSceneLogic.player.isMoving && hitValue <= aimStationary) || (hitValue <= aimMoving))
+        {
+            LoadSceneLogic.player.Health -= 10f;
+        }
+        else
+        {
+            RaycastHit hit;
+
+            if (Physics.Raycast(swatHead.transform.position, swatHead.transform.forward, out hit, 50f))
+            {
+                Vector3 point = hit.point;
+                point.x += 0.0002f;
+                point.y += 0.0002f;
+                point.z += 0.0002f;
+                GameObject newBulletDecal = Instantiate(bulletDecal, point, Quaternion.FromToRotation(Vector3.back, hit.normal));
+
+                Destroy(newBulletDecal, 30f);
+            }
+        }
     }
 
     public void SetHealth(int newHealth)
@@ -109,12 +138,12 @@ public class MafiaBossNPC : MonoBehaviour, INPCTemplate
 
                 agent.isStopped = true;
                 GetComponent<CapsuleCollider>().enabled = false;
-                GetComponent<CapsuleCollider>().center -= new Vector3(0f, 100f, 0f);
 
                 levelManager.remainingNPCs--;
                 levelManager.CheckLevelComplete();
 
                 DropGun();
+                Groan();
             }
         }
     }
@@ -144,5 +173,11 @@ public class MafiaBossNPC : MonoBehaviour, INPCTemplate
     public string GetTargetName()
     {
         return targetName;
+    }
+
+    private void Groan()
+    {
+        int index = Random.Range(0, groanSFX.Length);
+        bodySource.PlayOneShot(groanSFX[index]);
     }
 }

@@ -21,7 +21,7 @@ public class ControlsSinglePlayer : MonoBehaviour
     public bool controlsPanel;
 
 
-    public SettingsSinglePlayer sC;
+    // public SettingsSinglePlayer sC;
 
 
     public void SetPanelActive(bool val)
@@ -68,12 +68,13 @@ public class ControlsSinglePlayer : MonoBehaviour
         controls = new Dictionary<string, KeyCode>();
 
         //mutable keybinds:
-        controls.Add("sprint", KeyCode.LeftControl);
-        controls.Add("crouch", KeyCode.LeftShift);
+        controls.Add("sprint", KeyCode.LeftShift);
+        controls.Add("crouch", KeyCode.LeftControl);
         controls.Add("jump", KeyCode.Space);
         controls.Add("open", KeyCode.E);
         controls.Add("grab", KeyCode.G);
         controls.Add("drop", KeyCode.Z);
+        controls.Add("slide", KeyCode.F);
 
         // immutable keys:
         controls.Add("forward", KeyCode.W);
@@ -81,7 +82,6 @@ public class ControlsSinglePlayer : MonoBehaviour
         controls.Add("right", KeyCode.D);
         controls.Add("left", KeyCode.A);
         controls.Add("attack", KeyCode.Mouse0);
-        controls.Add("scope", KeyCode.Mouse1);
     }
 
     void OnGUI()
@@ -101,18 +101,18 @@ public class ControlsSinglePlayer : MonoBehaviour
                     return;
                 }
             }
-            if (HasDuplicates())
-            {
-                disableBack.SetActive(true);
-                warningPanel.SetActive(true);
-                sC.otherFactors = false;
-            }
-            else
-            {
-                disableBack.SetActive(false);
-                warningPanel.SetActive(false);
-                sC.otherFactors = true;
-            }
+            //if (HasDuplicates())
+            //{
+            //    disableBack.SetActive(true);
+            //    warningPanel.SetActive(true);
+            //    // sC.otherFactors = false;
+            //}
+            //else
+            //{
+            //    disableBack.SetActive(false);
+            //    warningPanel.SetActive(false);
+            //    // sC.otherFactors = true;
+            //}
         }
     }
 

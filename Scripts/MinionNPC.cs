@@ -11,6 +11,8 @@ public class MinionNPC : MonoBehaviour
     public AudioSource audioSource;
     public AudioClip handgunSFX;
 
+    public GameObject scene, finalCam;
+
     private void SceneTransition()
     {
         part1Transition.SetActive(true);
@@ -19,7 +21,11 @@ public class MinionNPC : MonoBehaviour
 
     private IEnumerator LoadNextScene()
     {
-        yield return new WaitForSecondsRealtime(2f);
+        yield return new WaitForSecondsRealtime(0.3f);
+        scene.SetActive(false);
+        finalCam.SetActive(true);
+
+        yield return new WaitForSecondsRealtime(1f);
         Debug.Log("Loading Next Scene");
         SceneManager.LoadSceneAsync(2);
     }

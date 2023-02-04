@@ -3,11 +3,13 @@ using UnityEngine;
 public class InstructionsHandler : MonoBehaviour
 {
 
-    public GameObject instructions;
+    public GameObject instructionsLeft; // Primary instructions
+    public GameObject instructionsRight; // secondary instructions
 
     void Awake()
     {
-        LoadSceneLogic.SetInstructionsGameObject(instructions);
+        LoadSceneLogic.SetInstructions(instructionsLeft);
+        LoadSceneLogic.SetInstructionsSecondary(instructionsRight);
     }
 
 }

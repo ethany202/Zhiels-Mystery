@@ -40,7 +40,7 @@ public class SaveData
         //    objectName = player.GetObjectBody().name;
         //}
 
-        character = "FPS Character";//CustomizedData.GetCharacterName();
+        character = "FPS Character - Arms";//CustomizedData.GetCharacterName();
         examPhase = SceneManager.GetActiveScene().buildIndex;
     }
 }

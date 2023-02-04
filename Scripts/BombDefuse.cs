@@ -25,6 +25,9 @@ public class BombDefuse : MonoBehaviour
     public GameObject concussionEffect;
     public VisualEffect explosionVFX;
 
+    public AudioSource audioSrc;
+    public AudioClip keypadSFX;
+
     private void OnGUI()
     {
         if (usingCode)
@@ -60,6 +63,8 @@ public class BombDefuse : MonoBehaviour
             {
                 player = other.GetComponent<CharacterManager>();
                 LockStatus(true);
+
+                player.enabled = false;
             }
         }
     }
@@ -74,8 +79,13 @@ public class BombDefuse : MonoBehaviour
 
     private void ManageInput(KeyCode input)
     {
+        
+
         if (input.CompareTo(KeyCode.Return) == 0)
         {
+
+            audioSrc.PlayOneShot(keypadSFX);
+
             if (codeInput.text.Equals(SEQUENCE))
             {
                 Invoke("ExplodeWall", 2f);
@@ -84,6 +94,7 @@ public class BombDefuse : MonoBehaviour
             else
             {
                 codeInput.text = "";
+                player.enabled = true;
             }
             LockStatus(false);
         }
@@ -94,6 +105,8 @@ public class BombDefuse : MonoBehaviour
                 string text = input.ToString();
                 int number = int.Parse(text.Substring(text.Length - 1));
                 codeInput.text += (number + "");
+
+                audioSrc.PlayOneShot(keypadSFX);
             }
             catch (FormatException error)
             {
@@ -122,10 +135,12 @@ public class BombDefuse : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(0.15f);
         explosionVFX.Play();
-        StartCoroutine(LoadSceneLogic.player.viewObject.ShakeCamera());
+        StartCoroutine(LoadSceneLogic.player.viewObject.DamageShake(1f, 2.5f));
 
         yield return new WaitForSecondsRealtime(0.2f);
         concussionEffect.SetActive(true);
 
+        float damagedHealth = 100 - Mathf.Floor(Vector3.Distance(LoadSceneLogic.player.transform.position, this.transform.position));
+        LoadSceneLogic.player.Health = damagedHealth;
     }
 }

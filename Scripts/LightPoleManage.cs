@@ -11,25 +11,25 @@ public class LightPoleManage : MonoBehaviour
 
     private bool lightsOn = false;
 
-    void Update()
-    {
-        if(time.GetTimeOfDay()<=7.5f || time.GetTimeOfDay() >= 16f)
-        {
-            if (!lightsOn)
-            {
-                pointLight.SetActive(true);
-                spotLight.SetActive(true);
-                lightsOn = !lightsOn;
-            }
-        }
-        else
-        {
-            if (lightsOn)
-            {
-                pointLight.SetActive(false);
-                spotLight.SetActive(false);
-                lightsOn = !lightsOn;
-            }
-        }
-    }
+    //void Update()
+    //{
+    //    if(time.GetTimeOfDay()<=7.5f || time.GetTimeOfDay() >= 16f)
+    //    {
+    //        if (!lightsOn)
+    //        {
+    //            pointLight.SetActive(true);
+    //            spotLight.SetActive(true);
+    //            lightsOn = !lightsOn;
+    //        }
+    //    }
+    //    else
+    //    {
+    //        if (lightsOn)
+    //        {
+    //            pointLight.SetActive(false);
+    //            spotLight.SetActive(false);
+    //            lightsOn = !lightsOn;
+    //        }
+    //    }
+    //}
 }

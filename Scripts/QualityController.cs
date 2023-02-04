@@ -24,6 +24,9 @@ public class QualityController : MonoBehaviour
 
 
         QualitySettings.particleRaycastBudget = QualityProperties.GetParticleRaycastBudget();
+
+        Debug.Log(QualityProperties.GetQualityIndex());
+        Debug.Log(QualityProperties.GetVSyncIndex());
     }
 
     private void OnGameOverlayActivated(GameOverlayActivated_t pCallback)

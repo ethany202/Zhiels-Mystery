@@ -12,8 +12,8 @@ public class ClockManager : MonoBehaviour
     private int sumIndex = 0;
     private const string FINAL_TIME = "03:08";
 
-    private string[] times = { "02:44", "04:52", "05:36", "03:59", "01:11" };
-    private static int[] answers = { 6, 3, 4, 11, 1 };
+    private string[] times = { "02:44", "04:52", "05:36", "03:59", "8:28", "12:39", "2:28", "1:35", "3:17", "01:11"};
+    private static int[] answers = { 6, 3, 4, 11, 2, 9, 8, 7, 5, 13 };
     private bool[] passedSums;
 
     private void Start()
@@ -24,15 +24,15 @@ public class ClockManager : MonoBehaviour
     {
         guess++;
         passedSums[sumIndex] = true;
-        if (guess > times.Length)
+        if (guess > 5)
         {
             time.text = FINAL_TIME;
             timeObj.SetActive(false);
             return false;
         }
-        else if (guess == times.Length)
+        else if (guess == 5)
         {
-            sumIndex = guess - 1;
+            sumIndex = times.Length-1;
             time.text = times[sumIndex] + "";
             return true;
         }
@@ -45,15 +45,12 @@ public class ClockManager : MonoBehaviour
             time.text = times[sumIndex] + "";
             return true;
         }
-
-
     }
-
 
     public void ResetStage()
     {
         guess = 1;
-        passedSums = new bool[5] { false, false, false, false, false };
+        passedSums = new bool[10];
         sumIndex = (new System.Random()).Next(0, times.Length - 1);
         time.text = times[sumIndex] + "";
     }
